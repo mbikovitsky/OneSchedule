@@ -1,6 +1,10 @@
 #pragma once
 
-#include "pch.hpp"
+#include <atomic>
+
+#include <Windows.h>
+
+#include <wil/com.h>
 
 
 class OneNoteEventsUnmarshal final : public IMarshal

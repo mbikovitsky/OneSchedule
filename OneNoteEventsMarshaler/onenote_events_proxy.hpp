@@ -1,6 +1,12 @@
 #pragma once
 
-#include "pch.hpp"
+#include <atomic>
+
+#include <Windows.h>
+
+#include <wil/com.h>
+
+#include <onenote.hpp>
 
 
 class OneNoteEventsProxy final : public OneNote::IOneNoteEvents, public IMarshal

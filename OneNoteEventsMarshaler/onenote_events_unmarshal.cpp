@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "onenote_events_unmarshal.hpp"
 
 #include "onenote_events_proxy.hpp"
