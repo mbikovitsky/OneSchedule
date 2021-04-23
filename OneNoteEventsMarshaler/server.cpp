@@ -8,12 +8,15 @@
 #include <wil/result.h>
 
 #include "onenote_events_unmarshal.hpp"
+#include "onenote_events_unmarshal_factory.hpp"
 
 
 #define ONENOTE_EVENTS_UNMARSHAL_SUBKEY L"SOFTWARE\\Classes\\CLSID\\{" ONENOTE_EVENTS_UNMARSHAL_CLSID L"}"
 
 
 namespace {
+
+constexpr wchar_t kBothThreadingModel[] = L"Both";
 
 std::wstring get_module_filename()
 {
@@ -64,8 +67,8 @@ try
                             L"ThreadingModel",
                             0,
                             REG_SZ,
-                            reinterpret_cast<BYTE const *>(L"Both"),
-                            sizeof(L"Both"));
+                            reinterpret_cast<BYTE const *>(&kBothThreadingModel[0]),
+                            sizeof(kBothThreadingModel));
     if (ERROR_SUCCESS != result)
     {
         RETURN_HR(HRESULT_FROM_WIN32(result));
@@ -85,5 +88,27 @@ try
     }
 
     return S_OK;
+}
+CATCH_RETURN()
+
+extern "C" HRESULT __stdcall DllGetClassObject(CLSID const & clsid,
+                                               IID const & iid,
+                                               void ** ppv) /*noexcept*/
+try
+{
+    if (nullptr == ppv)
+    {
+        return E_POINTER;
+    }
+    *ppv = nullptr;
+
+    if (clsid == __uuidof(OneNoteEventsUnmarshal))
+    {
+        return OneNoteEventsUnmarshalFactory::create_instance()->QueryInterface(iid, ppv);
+    }
+    else
+    {
+        return CLASS_E_CLASSNOTAVAILABLE;
+    }
 }
 CATCH_RETURN()
