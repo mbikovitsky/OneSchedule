@@ -7,7 +7,11 @@
 #include <wil/com.h>
 
 
-class OneNoteEventsUnmarshal final : public IMarshal
+#define ONENOTE_EVENTS_UNMARSHAL_CLSID "28F3F297-33A1-4881-888B-D0784B2D258A"
+
+
+class __declspec(uuid(ONENOTE_EVENTS_UNMARSHAL_CLSID)) OneNoteEventsUnmarshal final
+    : public IMarshal
 {
 private:
     std::atomic<ULONG> _reference_count = 1;

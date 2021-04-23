@@ -12,4 +12,7 @@
     <ClInclude Include="include\marshal.hpp" />
     <ClInclude Include="onenote_events_unmarshal_factory.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Exports.def" />
+  </ItemGroup>
 </Project>
