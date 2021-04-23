@@ -1,33 +1,26 @@
 #pragma once
 
-#include <atomic>
-
 #include <Windows.h>
+#include <wrl.h>
 
 #include <wil/com.h>
 
 #include <onenote.hpp>
 
 
-class OneNoteEventsProxy final : public OneNote::IOneNoteEvents, public IMarshal
+class OneNoteEventsProxy final
+    : public Microsoft::WRL::RuntimeClass<
+        Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom |
+                                          Microsoft::WRL::InhibitFtmBase>,
+        OneNote::IOneNoteEvents,
+        IDispatch,
+        IMarshal>
 {
 private:
-    std::atomic<ULONG> _reference_count = 1;
     wil::com_ptr<IDispatch> _remote_object;
 
 public:
-    static wil::com_ptr<OneNoteEventsProxy> create_instance(
-        wil::com_ptr<IDispatch> const & remote_object);
-
-    OneNoteEventsProxy(OneNoteEventsProxy const &) = delete;
-    OneNoteEventsProxy & operator=(OneNoteEventsProxy const &) = delete;
-
-    OneNoteEventsProxy(OneNoteEventsProxy &&) = delete;
-    OneNoteEventsProxy & operator=(OneNoteEventsProxy &&) = delete;
-
-    HRESULT QueryInterface(IID const & riid, void ** ppvObject) noexcept override;
-    ULONG AddRef() noexcept override;
-    ULONG Release() noexcept override;
+    explicit OneNoteEventsProxy(wil::com_ptr<IDispatch> remote_object);
 
     HRESULT GetUnmarshalClass(IID const & riid,
                               void * pv,
@@ -66,9 +59,4 @@ public:
                    VARIANT * pVarResult,
                    EXCEPINFO * pExcepInfo,
                    UINT * puArgErr) noexcept override;
-
-private:
-    explicit OneNoteEventsProxy(wil::com_ptr<IDispatch> remote_object);
-
-    ~OneNoteEventsProxy();
 };

@@ -1,4 +1,4 @@
-#include "marshal.hpp"
+#include <marshal.hpp>
 
 #include <Windows.h>
 
@@ -16,9 +16,9 @@ try
         return E_POINTER;
     }
 
-    auto wrapper = OneNoteEventsProxy::create_instance(event_sink);
+    auto wrapper = Microsoft::WRL::Make<OneNoteEventsProxy>(event_sink);
 
-    *wrapper_out_ptr = wrapper.detach();
+    *wrapper_out_ptr = wrapper.Detach();
     return S_OK;
 }
 CATCH_RETURN()

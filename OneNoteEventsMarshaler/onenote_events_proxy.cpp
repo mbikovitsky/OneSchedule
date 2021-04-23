@@ -1,65 +1,7 @@
 #include "onenote_events_proxy.hpp"
 
 #include "onenote_events_unmarshal.hpp"
-#include "server.hpp"
 
-
-wil::com_ptr<OneNoteEventsProxy> OneNoteEventsProxy::create_instance(
-    wil::com_ptr<IDispatch> const & remote_object)
-{
-    wil::com_ptr<OneNoteEventsProxy> result{};
-    result.attach(new OneNoteEventsProxy(remote_object));
-    return result;
-}
-
-HRESULT OneNoteEventsProxy::QueryInterface(IID const & riid, void ** ppvObject) noexcept
-{
-    if (nullptr == ppvObject)
-    {
-        return E_POINTER;
-    }
-
-    if (riid == __uuidof(IUnknown))
-    {
-        *ppvObject = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
-    }
-    else if (riid == __uuidof(IDispatch))
-    {
-        *ppvObject = static_cast<IDispatch *>(this);
-    }
-    else if (riid == __uuidof(IOneNoteEvents))
-    {
-        *ppvObject = static_cast<IOneNoteEvents *>(this);
-    }
-    else if (riid == __uuidof(IMarshal))
-    {
-        *ppvObject = static_cast<IMarshal *>(this);
-    }
-    else
-    {
-        *ppvObject = nullptr;
-        return E_NOINTERFACE;
-    }
-
-    static_cast<IUnknown *>(*ppvObject)->AddRef();
-
-    return S_OK;
-}
-
-ULONG OneNoteEventsProxy::AddRef() noexcept
-{
-    return ++_reference_count;
-}
-
-ULONG OneNoteEventsProxy::Release() noexcept
-{
-    auto const new_refcount = --_reference_count;
-    if (0 == new_refcount)
-    {
-        delete this;
-    }
-    return new_refcount;
-}
 
 HRESULT OneNoteEventsProxy::GetUnmarshalClass(IID const & /*riid*/,
                                               void * /*pv*/,
@@ -164,10 +106,4 @@ HRESULT OneNoteEventsProxy::Invoke(DISPID dispIdMember,
 OneNoteEventsProxy::OneNoteEventsProxy(wil::com_ptr<IDispatch> remote_object)
     : _remote_object(std::move(remote_object))
 {
-    Server::notify_object_created();
-}
-
-OneNoteEventsProxy::~OneNoteEventsProxy()
-{
-    Server::notify_object_destroyed();
 }

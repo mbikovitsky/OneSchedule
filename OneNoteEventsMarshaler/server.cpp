@@ -1,10 +1,7 @@
-#include "server.hpp"
-
 #include <string>
-#include <atomic>
-#include <cassert>
 
 #include <Windows.h>
+#include <wrl.h>
 
 #include <wil/resource.h>
 #include <wil/stl.h>
@@ -12,7 +9,6 @@
 #include <wil/result.h>
 
 #include "onenote_events_unmarshal.hpp"
-#include "onenote_events_unmarshal_factory.hpp"
 
 
 #define ONENOTE_EVENTS_UNMARSHAL_SUBKEY L"SOFTWARE\\Classes\\CLSID\\{" ONENOTE_EVENTS_UNMARSHAL_CLSID L"}"
@@ -21,9 +17,6 @@
 namespace {
 
 constexpr wchar_t kBothThreadingModel[] = L"Both";
-
-std::atomic<ULONG> g_lock_count = 0;
-std::atomic<ULONG> g_object_count = 0;
 
 std::wstring get_module_filename()
 {
@@ -36,37 +29,6 @@ std::wstring get_module_filename()
     return module_filename;
 }
 
-}
-
-
-void Server::lock() noexcept
-{
-    ++g_lock_count;
-}
-
-void Server::unlock() noexcept
-{
-    ULONG count = 0;
-    do
-    {
-        count = g_lock_count.load();
-        if (0 == count)
-        {
-            break;
-        }
-    }
-    while (!g_lock_count.compare_exchange_weak(count, count - 1));
-}
-
-void Server::notify_object_created() noexcept
-{
-    ++g_object_count;
-}
-
-void Server::notify_object_destroyed() noexcept
-{
-    auto const old_object_count = g_object_count--;
-    assert(0 != old_object_count);
 }
 
 
@@ -134,24 +96,14 @@ extern "C" HRESULT __stdcall DllGetClassObject(CLSID const & clsid,
                                                void ** ppv) /*noexcept*/
 try
 {
-    if (nullptr == ppv)
-    {
-        return E_POINTER;
-    }
-    *ppv = nullptr;
-
-    if (clsid == __uuidof(OneNoteEventsUnmarshal))
-    {
-        return OneNoteEventsUnmarshalFactory::create_instance()->QueryInterface(iid, ppv);
-    }
-    else
-    {
-        return CLASS_E_CLASSNOTAVAILABLE;
-    }
+    return Microsoft::WRL::Module<Microsoft::WRL::InProc>::GetModule().GetClassObject(
+        clsid,
+        iid,
+        ppv);
 }
 CATCH_RETURN()
 
 extern "C" HRESULT __stdcall DllCanUnloadNow() /*noexcept*/
 {
-    return (0 == g_lock_count) && (0 == g_object_count);
+    return Microsoft::WRL::Module<Microsoft::WRL::InProc>::GetModule().Terminate() ? S_OK : S_FALSE;
 }

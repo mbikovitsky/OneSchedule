@@ -1,56 +1,7 @@
 #include "onenote_events_unmarshal.hpp"
 
 #include "onenote_events_proxy.hpp"
-#include "server.hpp"
 
-
-wil::com_ptr<OneNoteEventsUnmarshal> OneNoteEventsUnmarshal::create_instance()
-{
-    wil::com_ptr<OneNoteEventsUnmarshal> result{};
-    result.attach(new OneNoteEventsUnmarshal());
-    return result;
-}
-
-HRESULT OneNoteEventsUnmarshal::QueryInterface(IID const & riid, void ** ppvObject) noexcept
-{
-    if (nullptr == ppvObject)
-    {
-        return E_POINTER;
-    }
-
-    if (riid == __uuidof(IUnknown))
-    {
-        *ppvObject = static_cast<IUnknown *>(this);
-    }
-    else if (riid == __uuidof(IMarshal))
-    {
-        *ppvObject = static_cast<IMarshal *>(this);
-    }
-    else
-    {
-        *ppvObject = nullptr;
-        return E_NOINTERFACE;
-    }
-
-    static_cast<IUnknown *>(*ppvObject)->AddRef();
-
-    return S_OK;
-}
-
-ULONG OneNoteEventsUnmarshal::AddRef() noexcept
-{
-    return ++_reference_count;
-}
-
-ULONG OneNoteEventsUnmarshal::Release() noexcept
-{
-    auto const new_refcount = --_reference_count;
-    if (0 == new_refcount)
-    {
-        delete this;
-    }
-    return new_refcount;
-}
 
 HRESULT OneNoteEventsUnmarshal::GetUnmarshalClass(IID const & /*riid*/,
                                                   void * /*pv*/,
@@ -96,7 +47,7 @@ HRESULT OneNoteEventsUnmarshal::UnmarshalInterface(IStream * pStm,
 
     try
     {
-        auto proxy = OneNoteEventsProxy::create_instance(remote_object);
+        auto proxy = Microsoft::WRL::Make<OneNoteEventsProxy>(remote_object);
         return proxy->QueryInterface(riid, ppv);
     }
     CATCH_RETURN()
@@ -110,14 +61,4 @@ HRESULT OneNoteEventsUnmarshal::ReleaseMarshalData(IStream * pStm) noexcept
 HRESULT OneNoteEventsUnmarshal::DisconnectObject(DWORD /*dwReserved*/) noexcept
 {
     return E_NOTIMPL;
-}
-
-OneNoteEventsUnmarshal::OneNoteEventsUnmarshal()
-{
-    Server::notify_object_created();
-}
-
-OneNoteEventsUnmarshal::~OneNoteEventsUnmarshal()
-{
-    Server::notify_object_destroyed();
 }
