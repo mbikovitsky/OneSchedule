@@ -3,8 +3,13 @@
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="onenote_events_proxy.cpp" />
+    <ClCompile Include="onenote_events_unmarshal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp" />
+    <ClInclude Include="onenote_events_proxy.hpp" />
+    <ClInclude Include="onenote_events_unmarshal.hpp" />
+    <ClInclude Include="include\marshal.hpp" />
   </ItemGroup>
 </Project>
