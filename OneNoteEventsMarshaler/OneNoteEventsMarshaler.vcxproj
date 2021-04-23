@@ -173,11 +173,13 @@
     <ClInclude Include="include\marshal.hpp" />
     <ClInclude Include="onenote_events_unmarshal.hpp" />
     <ClInclude Include="onenote_events_proxy.hpp" />
+    <ClInclude Include="onenote_events_unmarshal_factory.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="onenote_events_unmarshal.cpp" />
     <ClCompile Include="onenote_events_proxy.cpp" />
+    <ClCompile Include="onenote_events_unmarshal_factory.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
