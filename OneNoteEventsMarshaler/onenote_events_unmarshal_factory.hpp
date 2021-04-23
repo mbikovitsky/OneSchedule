@@ -33,5 +33,5 @@ public:
 
 private:
     OneNoteEventsUnmarshalFactory();
-    ~OneNoteEventsUnmarshalFactory() = default;
+    ~OneNoteEventsUnmarshalFactory();
 };

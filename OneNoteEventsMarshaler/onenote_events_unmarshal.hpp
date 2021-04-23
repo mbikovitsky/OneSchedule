@@ -52,6 +52,6 @@ public:
     HRESULT DisconnectObject(DWORD dwReserved) noexcept override;
 
 private:
-    OneNoteEventsUnmarshal() = default;
-    ~OneNoteEventsUnmarshal() = default;
+    OneNoteEventsUnmarshal();
+    ~OneNoteEventsUnmarshal();
 };

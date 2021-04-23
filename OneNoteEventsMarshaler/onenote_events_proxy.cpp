@@ -1,6 +1,7 @@
 #include "onenote_events_proxy.hpp"
 
 #include "onenote_events_unmarshal.hpp"
+#include "server.hpp"
 
 
 wil::com_ptr<OneNoteEventsProxy> OneNoteEventsProxy::create_instance(
@@ -163,4 +164,10 @@ HRESULT OneNoteEventsProxy::Invoke(DISPID dispIdMember,
 OneNoteEventsProxy::OneNoteEventsProxy(wil::com_ptr<IDispatch> remote_object)
     : _remote_object(std::move(remote_object))
 {
+    Server::notify_object_created();
+}
+
+OneNoteEventsProxy::~OneNoteEventsProxy()
+{
+    Server::notify_object_destroyed();
 }

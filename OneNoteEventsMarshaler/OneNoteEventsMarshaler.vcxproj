@@ -178,6 +178,7 @@
     <ClInclude Include="onenote_events_unmarshal.hpp" />
     <ClInclude Include="onenote_events_proxy.hpp" />
     <ClInclude Include="onenote_events_unmarshal_factory.hpp" />
+    <ClInclude Include="server.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="server.cpp" />

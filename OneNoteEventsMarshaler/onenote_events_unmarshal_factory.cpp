@@ -1,6 +1,7 @@
 #include "onenote_events_unmarshal_factory.hpp"
 
 #include "onenote_events_unmarshal.hpp"
+#include "server.hpp"
 
 
 wil::com_ptr<OneNoteEventsUnmarshalFactory> OneNoteEventsUnmarshalFactory::create_instance()
@@ -72,8 +73,17 @@ HRESULT OneNoteEventsUnmarshalFactory::CreateInstance(IUnknown * pUnkOuter,
     CATCH_RETURN()
 }
 
-HRESULT OneNoteEventsUnmarshalFactory::LockServer(BOOL /*fLock*/) noexcept
+HRESULT OneNoteEventsUnmarshalFactory::LockServer(BOOL fLock) noexcept
 {
+    if (fLock)
+    {
+        Server::lock();
+    }
+    else
+    {
+        Server::unlock();
+    }
+
     return S_OK;
 }
 
@@ -85,4 +95,11 @@ OneNoteEventsUnmarshalFactory::OneNoteEventsUnmarshalFactory()
         THROW_HR(result);
     }
     _ftm = ftm;
+
+    Server::notify_object_created();
+}
+
+OneNoteEventsUnmarshalFactory::~OneNoteEventsUnmarshalFactory()
+{
+    Server::notify_object_destroyed();
 }

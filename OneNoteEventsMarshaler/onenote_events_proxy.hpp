@@ -70,5 +70,5 @@ public:
 private:
     explicit OneNoteEventsProxy(wil::com_ptr<IDispatch> remote_object);
 
-    ~OneNoteEventsProxy() = default;
+    ~OneNoteEventsProxy();
 };

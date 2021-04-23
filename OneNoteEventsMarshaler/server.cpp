@@ -1,4 +1,8 @@
+#include "server.hpp"
+
 #include <string>
+#include <atomic>
+#include <cassert>
 
 #include <Windows.h>
 
@@ -18,6 +22,9 @@ namespace {
 
 constexpr wchar_t kBothThreadingModel[] = L"Both";
 
+std::atomic<ULONG> g_lock_count = 0;
+std::atomic<ULONG> g_object_count = 0;
+
 std::wstring get_module_filename()
 {
     std::wstring module_filename{};
@@ -29,6 +36,37 @@ std::wstring get_module_filename()
     return module_filename;
 }
 
+}
+
+
+void Server::lock() noexcept
+{
+    ++g_lock_count;
+}
+
+void Server::unlock() noexcept
+{
+    ULONG count = 0;
+    do
+    {
+        count = g_lock_count.load();
+        if (0 == count)
+        {
+            break;
+        }
+    }
+    while (!g_lock_count.compare_exchange_weak(count, count - 1));
+}
+
+void Server::notify_object_created() noexcept
+{
+    ++g_object_count;
+}
+
+void Server::notify_object_destroyed() noexcept
+{
+    auto const old_object_count = g_object_count--;
+    assert(0 != old_object_count);
 }
 
 
@@ -112,3 +150,8 @@ try
     }
 }
 CATCH_RETURN()
+
+extern "C" HRESULT __stdcall DllCanUnloadNow() /*noexcept*/
+{
+    return (0 == g_lock_count) && (0 == g_object_count);
+}

@@ -1,6 +1,7 @@
 #include "onenote_events_unmarshal.hpp"
 
 #include "onenote_events_proxy.hpp"
+#include "server.hpp"
 
 
 wil::com_ptr<OneNoteEventsUnmarshal> OneNoteEventsUnmarshal::create_instance()
@@ -109,4 +110,14 @@ HRESULT OneNoteEventsUnmarshal::ReleaseMarshalData(IStream * pStm) noexcept
 HRESULT OneNoteEventsUnmarshal::DisconnectObject(DWORD /*dwReserved*/) noexcept
 {
     return E_NOTIMPL;
+}
+
+OneNoteEventsUnmarshal::OneNoteEventsUnmarshal()
+{
+    Server::notify_object_created();
+}
+
+OneNoteEventsUnmarshal::~OneNoteEventsUnmarshal()
+{
+    Server::notify_object_destroyed();
 }
