@@ -47,7 +47,8 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <GenerateManifest>false</GenerateManifest>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis Condition="'$(Configuration)'=='Debug'">false</RunCodeAnalysis>
+    <RunCodeAnalysis Condition="'$(Configuration)'=='Release'">true</RunCodeAnalysis>
     <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
