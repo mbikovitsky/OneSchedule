@@ -16,16 +16,6 @@ class __declspec(uuid(ONENOTE_EVENTS_UNMARSHAL_CLSID)) OneNoteEventsUnmarshal fi
         IMarshal>
 {
 public:
-    OneNoteEventsUnmarshal() = default;
-
-    ~OneNoteEventsUnmarshal() override = default;
-
-    OneNoteEventsUnmarshal(OneNoteEventsUnmarshal const &) = delete;
-    OneNoteEventsUnmarshal & operator=(OneNoteEventsUnmarshal const &) = delete;
-
-    OneNoteEventsUnmarshal(OneNoteEventsUnmarshal &&) = delete;
-    OneNoteEventsUnmarshal & operator=(OneNoteEventsUnmarshal &&) = delete;
-
     HRESULT GetUnmarshalClass(IID const & riid,
                               void * pv,
                               DWORD dwDestContext,

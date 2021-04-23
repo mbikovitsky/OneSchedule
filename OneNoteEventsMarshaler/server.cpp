@@ -79,7 +79,6 @@ try
 CATCH_RETURN()
 
 extern "C" HRESULT __stdcall DllUnregisterServer() noexcept
-try
 {
     if (auto const result = RegDeleteTreeW(HKEY_CURRENT_USER, ONENOTE_EVENTS_UNMARSHAL_SUBKEY);
         ERROR_SUCCESS != result)
@@ -89,19 +88,16 @@ try
 
     return S_OK;
 }
-CATCH_RETURN()
 
 extern "C" HRESULT __stdcall DllGetClassObject(CLSID const & clsid,
                                                IID const & iid,
                                                void ** ppv) /*noexcept*/
-try
 {
     return Microsoft::WRL::Module<Microsoft::WRL::InProc>::GetModule().GetClassObject(
         clsid,
         iid,
         ppv);
 }
-CATCH_RETURN()
 
 extern "C" HRESULT __stdcall DllCanUnloadNow() /*noexcept*/
 {

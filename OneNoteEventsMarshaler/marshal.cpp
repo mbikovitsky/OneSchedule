@@ -1,6 +1,7 @@
 #include <marshal.hpp>
 
 #include <Windows.h>
+#include <wrl.h>
 
 #include <wil/result.h>
 
