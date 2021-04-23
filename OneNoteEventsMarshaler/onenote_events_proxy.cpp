@@ -1,6 +1,6 @@
 #include "onenote_events_proxy.hpp"
 
-#include <marshal.hpp>
+#include "onenote_events_unmarshal.hpp"
 
 
 wil::com_ptr<OneNoteEventsProxy> OneNoteEventsProxy::create_instance(

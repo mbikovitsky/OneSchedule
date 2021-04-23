@@ -1,4 +1,15 @@
 #pragma once
 
+#include <onenote.hpp>
 
-class __declspec(uuid("28F3F297-33A1-4881-888B-D0784B2D258A")) OneNoteEventsUnmarshal;
+
+#ifdef ONENOTEEVENTSMARSHALER_EXPORTS
+#define DLLEXPORT __declspec(dllexport)
+#else
+#define DLLEXPORT __declspec(dllimport)
+#endif
+
+
+extern "C" DLLEXPORT HRESULT
+    onemarshal_create_marshalable_wrapper(OneNote::IOneNoteEvents * event_sink,
+                                          OneNote::IOneNoteEvents ** wrapper) noexcept;
