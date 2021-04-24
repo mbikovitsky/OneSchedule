@@ -9,7 +9,7 @@ using OneNoteDotNet;
 
 namespace OneSchedule
 {
-    internal class Program
+    internal static class Program
     {
         private struct Timestamp
         {
@@ -18,7 +18,9 @@ namespace OneSchedule
         }
 
         private static readonly Regex TimestampRegex =
-            new Regex(@"//(?<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2}))(?:\s(?<comment>.*?)|)//");
+            new Regex(@"//(?<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2}))//");
+
+        private const string TimestampFormat = "yyyy-MM-ddTHH:mmK";
 
         private static void Main()
         {
@@ -98,20 +100,38 @@ namespace OneSchedule
             var textElements = pageContent.PlainTextElements.Where(element => !string.IsNullOrWhiteSpace(element));
             foreach (var textElement in textElements)
             {
-                var matches = TimestampRegex.Matches(textElement);
-                foreach (Match match in matches)
-                {
-                    Debug.Assert(match.Success);
-
-                    var timestampString = match.Groups["timestamp"].Value;
-                    var timestamp = DateTime.ParseExact(timestampString, "yyyy-MM-ddTHH:mmK",
-                        CultureInfo.InvariantCulture);
-
-                    var commentString = match.Groups["comment"].Value.Trim();
-
-                    yield return new Timestamp {Comment = commentString, Date = timestamp};
-                }
+                foreach (var timestamp in FindTimestamps(textElement)) yield return timestamp;
             }
+        }
+
+        private static IEnumerable<Timestamp> FindTimestamps(string textElement)
+        {
+            var (remainder, matches) = TimestampRegex.Remove(textElement);
+            remainder = remainder.Trim();
+            foreach (Match match in matches)
+            {
+                Debug.Assert(match.Success);
+
+                if (!ParseTimestamp(match.Groups["timestamp"].Value, out var timestamp))
+                {
+                    continue;
+                }
+
+                yield return new Timestamp {Comment = remainder, Date = timestamp};
+            }
+        }
+
+        private static bool ParseTimestamp(string timestampString, out DateTime timestamp)
+        {
+            return DateTime.TryParseExact(timestampString, TimestampFormat, CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out timestamp);
+        }
+
+        private static (string, MatchCollection) Remove(this Regex regex, string input)
+        {
+            var matches = regex.Matches(input);
+            var remainder = regex.Replace(input, "");
+            return (remainder, matches);
         }
     }
 }
