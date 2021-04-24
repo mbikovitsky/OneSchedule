@@ -3,7 +3,7 @@
 #include <onenote.hpp>
 
 
-#ifdef ONENOTEEVENTSMARSHALER_EXPORTS
+#ifdef ONEMARSHAL_EXPORTS
 #define DLLEXPORT __declspec(dllexport)
 #else
 #define DLLEXPORT __declspec(dllimport)

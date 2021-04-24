@@ -69,7 +69,7 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/Gw- %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared;$(SolutionDir)third_party\wil\include;$(SolutionDir)OneNoteEventsMarshaler\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared;$(SolutionDir)third_party\wil\include;$(SolutionDir)OneMarshal\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -98,7 +98,7 @@
       <CreateHotpatchableImage>false</CreateHotpatchableImage>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared;$(SolutionDir)third_party\wil\include;$(SolutionDir)OneNoteEventsMarshaler\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared;$(SolutionDir)third_party\wil\include;$(SolutionDir)OneMarshal\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,7 +128,7 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/Gw- %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared;$(SolutionDir)third_party\wil\include;$(SolutionDir)OneNoteEventsMarshaler\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared;$(SolutionDir)third_party\wil\include;$(SolutionDir)OneMarshal\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -157,7 +157,7 @@
       <CreateHotpatchableImage>false</CreateHotpatchableImage>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Shared;$(SolutionDir)third_party\wil\include;$(SolutionDir)OneNoteEventsMarshaler\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared;$(SolutionDir)third_party\wil\include;$(SolutionDir)OneMarshal\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -173,7 +173,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OneNoteEventsMarshaler\OneNoteEventsMarshaler.vcxproj">
+    <ProjectReference Include="..\OneMarshal\OneMarshal.vcxproj">
       <Project>{b8da34e4-1299-48b8-be75-5cfb9e5b6942}</Project>
     </ProjectReference>
   </ItemGroup>

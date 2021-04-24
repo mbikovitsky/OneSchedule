@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OneSchedule", "OneSchedule\OneSchedule.vcxproj", "{EA1C04E4-7EC2-4848-9C51-D19EAB738F52}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OneNoteEventsMarshaler", "OneNoteEventsMarshaler\OneNoteEventsMarshaler.vcxproj", "{B8DA34E4-1299-48B8-BE75-5CFB9E5B6942}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OneMarshal", "OneMarshal\OneMarshal.vcxproj", "{B8DA34E4-1299-48B8-BE75-5CFB9E5B6942}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
