@@ -6,7 +6,7 @@ namespace OneNoteDotNet
 {
     public class Notebook : PathHierarchyElement
     {
-        public Notebook(XElement xml) : base(xml)
+        internal Notebook(XElement xml) : base(xml)
         {
         }
 

@@ -5,7 +5,7 @@ namespace OneNoteDotNet
 {
     public class Page : HierarchyElement
     {
-        public Page(XElement xml) : base(xml)
+        internal Page(XElement xml) : base(xml)
         {
         }
 

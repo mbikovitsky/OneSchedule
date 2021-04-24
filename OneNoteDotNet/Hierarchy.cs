@@ -6,7 +6,7 @@ namespace OneNoteDotNet
 {
     public class Hierarchy : HierarchyBase
     {
-        public Hierarchy(XElement xml) : base(xml)
+        internal Hierarchy(XElement xml) : base(xml)
         {
         }
 

@@ -8,14 +8,15 @@ namespace OneNoteDotNet
 {
     public class PageContent
     {
-        public PageContent(XElement xml)
+        internal PageContent(XElement xml)
         {
             Xml = xml;
         }
 
         public XElement Xml { get; }
 
-        public IEnumerable<string> TextElements => Xml.Descendants(Xml.Name.Namespace + "T").Select(element => element.Value);
+        public IEnumerable<string> TextElements =>
+            Xml.Descendants(Xml.Name.Namespace + "T").Select(element => element.Value);
 
         public IEnumerable<string> PlainTextElements => TextElements.Select(text =>
         {

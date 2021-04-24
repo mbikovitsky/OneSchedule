@@ -6,7 +6,7 @@ namespace OneNoteDotNet
 {
     public class SectionGroup : PathHierarchyElement
     {
-        public SectionGroup(XElement xml) : base(xml)
+        internal SectionGroup(XElement xml) : base(xml)
         {
         }
 

@@ -10,7 +10,7 @@ namespace OneNoteDotNet
         public const string SectionGroupTag = "SectionGroup";
         public const string PageTag = "Page";
 
-        protected HierarchyBase(XElement xml)
+        protected internal HierarchyBase(XElement xml)
         {
             Xml = xml;
         }

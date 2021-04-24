@@ -6,7 +6,7 @@ namespace OneNoteDotNet
 {
     public abstract class HierarchyElement : HierarchyBase
     {
-        protected HierarchyElement(XElement xml) : base(xml)
+        protected internal HierarchyElement(XElement xml) : base(xml)
         {
         }
 

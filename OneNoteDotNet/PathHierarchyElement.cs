@@ -4,7 +4,7 @@ namespace OneNoteDotNet
 {
     public abstract class PathHierarchyElement : HierarchyElement
     {
-        protected PathHierarchyElement(XElement xml) : base(xml)
+        protected internal PathHierarchyElement(XElement xml) : base(xml)
         {
         }
 

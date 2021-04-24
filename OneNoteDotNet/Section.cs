@@ -6,7 +6,7 @@ namespace OneNoteDotNet
 {
     public class Section : PathHierarchyElement
     {
-        public Section(XElement xml) : base(xml)
+        internal Section(XElement xml) : base(xml)
         {
         }
 
