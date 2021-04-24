@@ -11,10 +11,44 @@ namespace OneSchedule
 {
     internal static class Program
     {
-        private struct Timestamp
+        private readonly struct Timestamp : IEquatable<Timestamp>
         {
-            public DateTime Date;
-            public string Comment;
+            public readonly DateTime Date;
+            public readonly string Comment;
+
+            public Timestamp(DateTime date, string comment)
+            {
+                Date = date;
+                Comment = comment;
+            }
+
+            public bool Equals(Timestamp other)
+            {
+                return Date.Equals(other.Date) && Comment == other.Comment;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is Timestamp other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (Date.GetHashCode() * 397) ^ Comment.GetHashCode();
+                }
+            }
+
+            public static bool operator ==(Timestamp left, Timestamp right)
+            {
+                return left.Equals(right);
+            }
+
+            public static bool operator !=(Timestamp left, Timestamp right)
+            {
+                return !left.Equals(right);
+            }
         }
 
         private static readonly Regex TimestampRegex =
@@ -31,31 +65,56 @@ namespace OneSchedule
 
                 WaitHandle[] handles = {notificationTimer, scanTimer};
 
+                var timestamps = new Dictionary<string, List<Timestamp>>();
+                var lastScanTime = DateTime.MinValue;
+                var lastNotificationTime = DateTime.Now;
                 while (true)
                 {
-                    var timestamps = FindClosestTimestamps(DateTime.Now).ToArray();
-                    if (timestamps.LongLength > 0)
-                    {
-                        notificationTimer.Set(timestamps[0].Date, TimeSpan.Zero);
-                    }
+                    var modifiedTimestamps = FindAllTimestamps(lastScanTime, lastNotificationTime);
+                    lastScanTime = DateTime.Now;
+                    timestamps.Update(modifiedTimestamps);
 
-                    var satisfiedWait = WaitHandle.WaitAny(handles);
-                    switch (satisfiedWait)
-                    {
-                        case 0:
-                            foreach (var timestamp in timestamps)
-                            {
-                                Console.WriteLine($"{timestamp.Date}: {timestamp.Comment}");
-                            }
+                    var closestTimestamp = FindClosestTimestamp(timestamps);
+                    notificationTimer.Set(closestTimestamp, TimeSpan.Zero);
 
-                            break;
+                    WaitHandle.WaitAny(handles);
 
-                        case 1:
-                            // Scan time!
-                            break;
-                    }
+                    var now = DateTime.Now;
+                    Notify(timestamps, now);
+                    lastNotificationTime = now;
                 }
             }
+        }
+
+        private static void Notify(IDictionary<string, List<Timestamp>> timestamps, DateTime until)
+        {
+            var toNotify = timestamps.Values
+                .Select(list => list.TakeWhile(timestamp => timestamp.Date <= until))
+                .Flatten()
+                .ToHashSet();
+
+            foreach (var timestamp in toNotify)
+            {
+                // TODO: Actual notification
+                Console.WriteLine($"{timestamp.Date}: {timestamp.Comment}");
+            }
+
+            foreach (var list in timestamps.Values)
+            {
+                list.RemoveAll(timestamp => toNotify.Contains(timestamp));
+            }
+
+
+            timestamps.RemoveAllKeys(pair => pair.Value.Count == 0);
+        }
+
+        private static DateTime FindClosestTimestamp(IReadOnlyDictionary<string, List<Timestamp>> timestamps)
+        {
+            return timestamps.Values
+                .Flatten()
+                .Select(timestamp => timestamp.Date)
+                .DefaultIfEmpty(DateTime.MaxValue)
+                .Min();
         }
 
         private static DateTime NextNearestMinute(DateTime dateTime)
@@ -73,40 +132,43 @@ namespace OneSchedule
             return result;
         }
 
-        private static IEnumerable<Timestamp> FindClosestTimestamps(DateTime after)
+        private static Dictionary<string, List<Timestamp>> FindAllTimestamps(
+            DateTime pagesModifiedAfter,
+            DateTime timestampsAfter
+        )
         {
             var oneNote = new OneNote();
 
+            (string Id, List<Timestamp> Timestamps) PageTimestamps(Page page)
+            {
+                return (
+                    page.Id,
+                    FindTimestampsInPage(oneNote.GetPageContent(page.Id, PageInfo.Basic), timestampsAfter).ToList()
+                );
+            }
+
             var timestamps = oneNote.Hierarchy.AllPages
-                .Select(page => FindTimestampsInPage(oneNote.GetPageContent(page.Id, PageInfo.Basic)))
-                .SelectMany(t => t)
+                .Where(page => page.LastModifiedTime.GetValueOrDefault(pagesModifiedAfter) >= pagesModifiedAfter)
+                .Select(PageTimestamps)
+                .Where(pair => pair.Timestamps.Count > 0)
+                .ToDictionary(pair => pair.Id, tuple => tuple.Timestamps);
+
+            return timestamps;
+        }
+
+        private static IEnumerable<Timestamp> FindTimestampsInPage(PageContent pageContent, DateTime after)
+        {
+            return pageContent.PlainTextElements
+                .Where(element => !string.IsNullOrWhiteSpace(element))
+                .Select(FindTimestampsInString)
+                .Flatten()
                 .Where(timestamp => timestamp.Date >= after)
-                .OrderBy(timestamp => timestamp.Date)
-                .GroupBy(timestamp => timestamp.Date)
-                .FirstOrDefault();
-
-            if (timestamps == null)
-            {
-                return new Timestamp[] { };
-            }
-            else
-            {
-                return timestamps;
-            }
+                .OrderBy(timestamp => timestamp.Date);
         }
 
-        private static IEnumerable<Timestamp> FindTimestampsInPage(PageContent pageContent)
+        private static IEnumerable<Timestamp> FindTimestampsInString(string input)
         {
-            var textElements = pageContent.PlainTextElements.Where(element => !string.IsNullOrWhiteSpace(element));
-            foreach (var textElement in textElements)
-            {
-                foreach (var timestamp in FindTimestamps(textElement)) yield return timestamp;
-            }
-        }
-
-        private static IEnumerable<Timestamp> FindTimestamps(string textElement)
-        {
-            var (remainder, matches) = TimestampRegex.Remove(textElement);
+            var (remainder, matches) = TimestampRegex.Remove(input);
             remainder = remainder.Trim();
             foreach (Match match in matches)
             {
@@ -117,7 +179,7 @@ namespace OneSchedule
                     continue;
                 }
 
-                yield return new Timestamp {Comment = remainder, Date = timestamp};
+                yield return new Timestamp(timestamp, remainder);
             }
         }
 
@@ -132,6 +194,32 @@ namespace OneSchedule
             var matches = regex.Matches(input);
             var remainder = regex.Replace(input, "");
             return (remainder, matches);
+        }
+
+        private static IEnumerable<T> Flatten<T>(this IEnumerable<IEnumerable<T>> enumerable)
+        {
+            return enumerable.SelectMany(t => t);
+        }
+
+        private static void Update<TKey, TValue>(
+            this IDictionary<TKey, TValue> dictionary,
+            IReadOnlyDictionary<TKey, TValue> source
+        )
+        {
+            foreach (var pair in source)
+            {
+                dictionary[pair.Key] = pair.Value;
+            }
+        }
+
+        private static void RemoveAllKeys<TKey, TValue>(this IDictionary<TKey, TValue> dictionary,
+            Func<KeyValuePair<TKey, TValue>, bool> predicate)
+        {
+            var toRemove = dictionary.Where(predicate).Select(pair => pair.Key).ToList();
+            foreach (var key in toRemove)
+            {
+                dictionary.Remove(key);
+            }
         }
     }
 }
