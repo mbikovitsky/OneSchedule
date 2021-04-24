@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="server.cpp" />
+    <ClCompile Include="onemarshal.cpp" />
+    <ClCompile Include="onenote_events_proxy.cpp" />
+    <ClCompile Include="onenote_events_unmarshal.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="onenote_events_proxy.hpp" />
+    <ClInclude Include="onenote_events_unmarshal.hpp" />
+    <ClInclude Include="include\onemarshal.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Exports.def" />
+  </ItemGroup>
+</Project>
