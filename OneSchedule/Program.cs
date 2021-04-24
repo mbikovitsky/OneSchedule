@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Mono.Options;
 
 namespace OneSchedule
 {
@@ -9,7 +11,52 @@ namespace OneSchedule
     {
         private const double ScanIntervalMinutes = 1;
 
-        private static void Main()
+        private readonly struct CommandLineOptions
+        {
+            public readonly List<string> Executable;
+
+            public CommandLineOptions(List<string> executable)
+            {
+                Executable = executable;
+            }
+        }
+
+        private static void Main(string[] args)
+        {
+            var commandLineOptions = ParseCommandLine(args);
+            if (commandLineOptions == null)
+            {
+                return;
+            }
+
+            Run(commandLineOptions.Value.Executable);
+        }
+
+        private static CommandLineOptions? ParseCommandLine(IEnumerable<string> args)
+        {
+            var arguments = new List<string>();
+            var showHelp = false;
+            var parserConfig = new OptionSet
+            {
+                {"h|help", "this cruft", arg => showHelp = arg != null},
+                {"<>", arg => arguments.Add(arg)},
+            };
+            parserConfig.Parse(args);
+
+            if (!showHelp && arguments.Count > 0)
+            {
+                return new CommandLineOptions(arguments);
+            }
+
+            var executableName = AppDomain.CurrentDomain.FriendlyName;
+            Console.WriteLine($"Usage: {executableName} [OPTIONS]+ program [ARGS]+");
+            Console.WriteLine();
+            parserConfig.WriteOptionDescriptions(Console.Out);
+
+            return null;
+        }
+
+        private static void Run(IReadOnlyList<string> executable)
         {
             using (var scanTimer = new WaitableTimer(false))
             using (var notificationTimer = new WaitableTimer(false))
@@ -33,13 +80,14 @@ namespace OneSchedule
                     WaitHandle.WaitAny(handles);
 
                     var now = DateTime.Now;
-                    Notify(timestamps, now);
+                    Notify(timestamps, now, executable);
                     lastNotificationTime = now;
                 }
             }
         }
 
-        private static void Notify(IDictionary<string, List<Timestamp>> timestamps, DateTime until)
+        private static void Notify(IDictionary<string, List<Timestamp>> timestamps, DateTime until,
+            IReadOnlyList<string> executable)
         {
             var toNotify = timestamps.Values
                 .Select(list => list.TakeWhile(timestamp => timestamp.Date <= until))
@@ -48,8 +96,15 @@ namespace OneSchedule
 
             foreach (var timestamp in toNotify)
             {
-                // TODO: Actual notification
-                Console.WriteLine($"{timestamp.Date}: {timestamp.Comment}");
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = executable[0],
+                    Arguments = Util.BuildCommandLine(executable.Skip(1)
+                        .Concat(new[] {timestamp.Date.ToString("O"), timestamp.Comment})),
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                };
+                Process.Start(startInfo);
             }
 
             foreach (var list in timestamps.Values)
