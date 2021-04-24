@@ -37,6 +37,12 @@ try
 {
     auto module_filename = get_module_filename();
 
+    auto const module_filename_size = (module_filename.size() + 1) * sizeof(module_filename[0]);
+    if (module_filename_size > MAXDWORD)
+    {
+        RETURN_HR(HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW));
+    }
+
     wil::unique_hkey key{};
     auto result = RegCreateKeyExW(HKEY_CURRENT_USER,
                                   ONENOTE_EVENTS_UNMARSHAL_SUBKEY L"\\InProcServer32",
@@ -57,7 +63,7 @@ try
                             0,
                             REG_SZ,
                             reinterpret_cast<BYTE const *>(module_filename.c_str()),
-                            (module_filename.size() + 1) * sizeof(module_filename[0]));
+                            static_cast<DWORD>(module_filename_size));
     if (ERROR_SUCCESS != result)
     {
         RETURN_HR(HRESULT_FROM_WIN32(result));
