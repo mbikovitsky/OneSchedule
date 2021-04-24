@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -15,6 +16,9 @@ namespace OneSchedule
             public DateTime Date;
             public string Comment;
         }
+
+        private static readonly Regex TimestampRegex =
+            new Regex(@"//(?<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2}))(?:\s(?<comment>.*?)|)//");
 
         private static void Main()
         {
@@ -94,19 +98,19 @@ namespace OneSchedule
             var textElements = pageContent.PlainTextElements.Where(element => !string.IsNullOrWhiteSpace(element));
             foreach (var textElement in textElements)
             {
-                var match = Regex.Match(textElement,
-                    @"//(?<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2}))(?:\s(?<comment>.*)|)//");
-                if (!match.Success)
+                var matches = TimestampRegex.Matches(textElement);
+                foreach (Match match in matches)
                 {
-                    continue;
+                    Debug.Assert(match.Success);
+
+                    var timestampString = match.Groups["timestamp"].Value;
+                    var timestamp = DateTime.ParseExact(timestampString, "yyyy-MM-ddTHH:mmK",
+                        CultureInfo.InvariantCulture);
+
+                    var commentString = match.Groups["comment"].Value.Trim();
+
+                    yield return new Timestamp {Comment = commentString, Date = timestamp};
                 }
-
-                var timestampString = match.Groups["timestamp"].Value;
-                var timestamp = DateTime.ParseExact(timestampString, "yyyy-MM-ddTHH:mmK", CultureInfo.InvariantCulture);
-
-                var commentString = match.Groups["comment"].Value.Trim();
-
-                yield return new Timestamp {Comment = commentString, Date = timestamp};
             }
         }
     }
