@@ -97,7 +97,11 @@ namespace OneTelegram
             var showHelp = false;
             var parserConfig = new OptionSet
             {
-                {"d|display-chat-ids", "only display chat IDs of received messages", arg => displayChatIds = arg != null},
+                {
+                    "d|display-chat-ids",
+                    "only display chat IDs of received messages",
+                    arg => displayChatIds = arg != null
+                },
                 {"h|help", "this cruft", arg => showHelp = arg != null},
             };
             parserConfig.Parse(args);
@@ -107,6 +111,8 @@ namespace OneTelegram
             {
                 var executableName = AppDomain.CurrentDomain.FriendlyName;
                 Console.WriteLine($"Usage: {executableName} [OPTIONS]+");
+                Console.WriteLine($"The {TokenEnvVar} environment variable must be set to the bot's token.");
+                Console.WriteLine($"The {ChatIdEnvVar} must be set for sending notifications.");
                 Console.WriteLine();
                 parserConfig.WriteOptionDescriptions(Console.Out);
 
@@ -116,6 +122,11 @@ namespace OneTelegram
             return new CommandLineOptions {DisplayChatIds = displayChatIds};
         }
 
+        /// <summary>
+        /// Continuously reads messages sent to the bot on Telegram and prints their chat IDs
+        /// to stdout.
+        /// </summary>
+        /// <param name="token">Telegram bot token</param>
         private static async Task DisplayChatIds(string token)
         {
             var endpoint = $"https://api.telegram.org/bot{token}/getUpdates";
@@ -154,6 +165,11 @@ namespace OneTelegram
             }
         }
 
+        /// <summary>
+        /// Sends a notification to Telegram.
+        /// </summary>
+        /// <param name="token">Telegram bot token</param>
+        /// <param name="chatId">Chat ID where to send the notification</param>
         private static async Task SendNotification(string token, long chatId)
         {
             var notification = await ReadNotification();
@@ -168,10 +184,13 @@ namespace OneTelegram
 
             using var client = new HttpClient();
 
-            var httpResponse = await client.PostAsJsonAsync(endpoint,parameters);
+            var httpResponse = await client.PostAsJsonAsync(endpoint, parameters);
             httpResponse.EnsureSuccessStatusCode();
         }
 
+        /// <summary>
+        /// Reads a notification structure from stdin.
+        /// </summary>
         private static async Task<Notification> ReadNotification()
         {
             await using var stdin = Console.OpenStandardInput();
