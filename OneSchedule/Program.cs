@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using Mono.Options;
 
@@ -13,12 +14,14 @@ namespace OneSchedule
 
         private readonly struct CommandLineOptions
         {
-            public readonly List<string> Executable;
+            public IReadOnlyList<string> Executable { get; init; }
+        }
 
-            public CommandLineOptions(List<string> executable)
-            {
-                Executable = executable;
-            }
+        private struct Message
+        {
+            public DateTime Date { get; set; }
+
+            public string Comment { get; set; }
         }
 
         private static void Main(string[] args)
@@ -34,55 +37,53 @@ namespace OneSchedule
 
         private static CommandLineOptions? ParseCommandLine(IEnumerable<string> args)
         {
-            var arguments = new List<string>();
             var showHelp = false;
             var parserConfig = new OptionSet
             {
                 {"h|help", "this cruft", arg => showHelp = arg != null},
-                {"<>", arg => arguments.Add(arg)},
             };
-            parserConfig.Parse(args);
+            var executableArguments = parserConfig.Parse(args);
 
-            if (!showHelp && arguments.Count > 0)
+            // ReSharper disable once InvertIf
+            if (showHelp || executableArguments.Count <= 0)
             {
-                return new CommandLineOptions(arguments);
+                var executableName = AppDomain.CurrentDomain.FriendlyName;
+                Console.WriteLine($"Usage: {executableName} [OPTIONS]+ program [ARGS]+");
+                Console.WriteLine();
+                parserConfig.WriteOptionDescriptions(Console.Out);
+
+                return null;
             }
 
-            var executableName = AppDomain.CurrentDomain.FriendlyName;
-            Console.WriteLine($"Usage: {executableName} [OPTIONS]+ program [ARGS]+");
-            Console.WriteLine();
-            parserConfig.WriteOptionDescriptions(Console.Out);
-
-            return null;
+            return new CommandLineOptions {Executable = executableArguments};
         }
 
         private static void Run(IReadOnlyList<string> executable)
         {
-            using (var scanTimer = new WaitableTimer(false))
-            using (var notificationTimer = new WaitableTimer(false))
+            using var scanTimer = new WaitableTimer(false);
+            using var notificationTimer = new WaitableTimer(false);
+
+            scanTimer.Set(NextNearestMinute(DateTime.Now), TimeSpan.FromMinutes(ScanIntervalMinutes));
+
+            WaitHandle[] handles = {notificationTimer, scanTimer};
+
+            var timestamps = new Dictionary<string, List<Timestamp>>();
+            var lastScanTime = DateTime.MinValue;
+            var lastNotificationTime = DateTime.Now;
+            while (true)
             {
-                scanTimer.Set(NextNearestMinute(DateTime.Now), TimeSpan.FromMinutes(ScanIntervalMinutes));
+                var modifiedTimestamps = TimestampExtractor.FindAllTimestamps(lastScanTime, lastNotificationTime);
+                lastScanTime = DateTime.Now;
+                timestamps.Update(modifiedTimestamps);
 
-                WaitHandle[] handles = {notificationTimer, scanTimer};
+                var closestTimestamp = FindClosestTimestamp(timestamps);
+                notificationTimer.Set(closestTimestamp, TimeSpan.Zero);
 
-                var timestamps = new Dictionary<string, List<Timestamp>>();
-                var lastScanTime = DateTime.MinValue;
-                var lastNotificationTime = DateTime.Now;
-                while (true)
-                {
-                    var modifiedTimestamps = TimestampExtractor.FindAllTimestamps(lastScanTime, lastNotificationTime);
-                    lastScanTime = DateTime.Now;
-                    timestamps.Update(modifiedTimestamps);
+                WaitHandle.WaitAny(handles);
 
-                    var closestTimestamp = FindClosestTimestamp(timestamps);
-                    notificationTimer.Set(closestTimestamp, TimeSpan.Zero);
-
-                    WaitHandle.WaitAny(handles);
-
-                    var now = DateTime.Now;
-                    Notify(timestamps, now, executable);
-                    lastNotificationTime = now;
-                }
+                var now = DateTime.Now;
+                Notify(timestamps, now, executable);
+                lastNotificationTime = now;
             }
         }
 
@@ -98,13 +99,28 @@ namespace OneSchedule
             {
                 var startInfo = new ProcessStartInfo
                 {
+                    // https://web.archive.org/web/20110126123911/http://blogs.msdn.com/b/jmstall/archive/2006/09/28/createnowindow.aspx
                     FileName = executable[0],
-                    Arguments = Util.BuildCommandLine(executable.Skip(1)
-                        .Concat(new[] {timestamp.Date.ToString("O"), timestamp.Comment})),
-                    CreateNoWindow = true,
+                    CreateNoWindow = false,
                     UseShellExecute = false,
+                    RedirectStandardInput = true
                 };
-                Process.Start(startInfo);
+                foreach (var argument in executable.Skip(1))
+                {
+                    startInfo.ArgumentList.Add(argument);
+                }
+
+                var process = Process.Start(startInfo);
+                if (process == null)
+                {
+                    continue;
+                }
+
+                var message = new Message {Date = timestamp.Date, Comment = timestamp.Comment};
+
+                using var writer = new Utf8JsonWriter(process.StandardInput.BaseStream);
+                JsonSerializer.Serialize(writer, message,
+                    new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
             }
 
             foreach (var list in timestamps.Values)
