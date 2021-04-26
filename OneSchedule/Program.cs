@@ -155,6 +155,7 @@ namespace OneSchedule
                 JsonSerializer.Serialize(writer, notification,
                     new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
             }
+            process.StandardInput.Close();
         }
 
         /// <summary>
