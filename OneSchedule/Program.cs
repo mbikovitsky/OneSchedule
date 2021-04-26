@@ -97,10 +97,11 @@ namespace OneSchedule
             {
                 var startInfo = new ProcessStartInfo
                 {
+                    // https://web.archive.org/web/20110126123911/http://blogs.msdn.com/b/jmstall/archive/2006/09/28/createnowindow.aspx
                     FileName = executable[0],
                     Arguments = Util.BuildCommandLine(executable.Skip(1)
                         .Concat(new[] {timestamp.Date.ToString("O"), timestamp.Comment})),
-                    CreateNoWindow = true,
+                    CreateNoWindow = false,
                     UseShellExecute = false,
                 };
                 Process.Start(startInfo);
