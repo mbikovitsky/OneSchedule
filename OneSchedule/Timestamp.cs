@@ -4,14 +4,9 @@ namespace OneSchedule
 {
     internal readonly struct Timestamp : IEquatable<Timestamp>
     {
-        public readonly DateTime Date;
-        public readonly string Comment;
+        public DateTime Date { get; init; }
 
-        public Timestamp(DateTime date, string comment)
-        {
-            Date = date;
-            Comment = comment;
-        }
+        public string Comment { get; init; }
 
         public bool Equals(Timestamp other)
         {
