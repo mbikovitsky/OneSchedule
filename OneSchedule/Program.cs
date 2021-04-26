@@ -99,11 +99,15 @@ namespace OneSchedule
                 {
                     // https://web.archive.org/web/20110126123911/http://blogs.msdn.com/b/jmstall/archive/2006/09/28/createnowindow.aspx
                     FileName = executable[0],
-                    Arguments = Util.BuildCommandLine(executable.Skip(1)
-                        .Concat(new[] {timestamp.Date.ToString("O"), timestamp.Comment})),
                     CreateNoWindow = false,
                     UseShellExecute = false,
                 };
+                foreach (var argument in executable.Skip(1))
+                {
+                    startInfo.ArgumentList.Add(argument);
+                }
+                startInfo.ArgumentList.Add(timestamp.Date.ToString("O"));
+                startInfo.ArgumentList.Add(timestamp.Comment);
                 Process.Start(startInfo);
             }
 
