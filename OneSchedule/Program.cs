@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using Mono.Options;
+using OneNoteDotNet;
 
 namespace OneSchedule
 {
@@ -80,6 +82,8 @@ namespace OneSchedule
                 notificationTimer.Set(closestTimestamp, TimeSpan.Zero);
 
                 WaitHandle.WaitAny(handles);
+
+                CleanUpDanglingTimestamps(timestamps);
 
                 var now = DateTime.Now;
                 Notify(timestamps, now, executable);
@@ -164,6 +168,19 @@ namespace OneSchedule
                 .Select(timestamp => timestamp.Date)
                 .DefaultIfEmpty(DateTime.MaxValue)
                 .Min();
+        }
+
+        /// <summary>
+        /// Deletes all timestamps defined in deleted pages.
+        /// </summary>
+        /// <param name="timestamps">Timestamps to clean up</param>
+        private static void CleanUpDanglingTimestamps(IDictionary<string, List<Timestamp>> timestamps)
+        {
+            var application = new OneNote();
+
+            var existingPageIds = application.Hierarchy.AllPages.Select(page => page.Id).ToImmutableHashSet();
+
+            timestamps.RemoveAllKeys(pair => !existingPageIds.Contains(pair.Key));
         }
     }
 }

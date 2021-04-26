@@ -24,9 +24,9 @@ namespace OneSchedule
             IReadOnlyDictionary<TKey, TValue> source
         )
         {
-            foreach (var pair in source)
+            foreach (var (key, value) in source)
             {
-                dictionary[pair.Key] = pair.Value;
+                dictionary[key] = value;
             }
         }
 
