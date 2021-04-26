@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using Mono.Options;
 
@@ -19,6 +20,13 @@ namespace OneSchedule
             {
                 Executable = executable;
             }
+        }
+
+        private struct Message
+        {
+            public DateTime Date { get; set; }
+
+            public string Comment { get; set; }
         }
 
         private static void Main(string[] args)
@@ -101,14 +109,24 @@ namespace OneSchedule
                     FileName = executable[0],
                     CreateNoWindow = false,
                     UseShellExecute = false,
+                    RedirectStandardInput = true
                 };
                 foreach (var argument in executable.Skip(1))
                 {
                     startInfo.ArgumentList.Add(argument);
                 }
-                startInfo.ArgumentList.Add(timestamp.Date.ToString("O"));
-                startInfo.ArgumentList.Add(timestamp.Comment);
-                Process.Start(startInfo);
+
+                var process = Process.Start(startInfo);
+                if (process == null)
+                {
+                    continue;
+                }
+
+                var message = new Message {Date = timestamp.Date, Comment = timestamp.Comment};
+
+                using var writer = new Utf8JsonWriter(process.StandardInput.BaseStream);
+                JsonSerializer.Serialize(writer, message,
+                    new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
             }
 
             foreach (var list in timestamps.Values)
