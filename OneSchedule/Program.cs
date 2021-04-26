@@ -58,31 +58,30 @@ namespace OneSchedule
 
         private static void Run(IReadOnlyList<string> executable)
         {
-            using (var scanTimer = new WaitableTimer(false))
-            using (var notificationTimer = new WaitableTimer(false))
+            using var scanTimer = new WaitableTimer(false);
+            using var notificationTimer = new WaitableTimer(false);
+
+            scanTimer.Set(NextNearestMinute(DateTime.Now), TimeSpan.FromMinutes(ScanIntervalMinutes));
+
+            WaitHandle[] handles = {notificationTimer, scanTimer};
+
+            var timestamps = new Dictionary<string, List<Timestamp>>();
+            var lastScanTime = DateTime.MinValue;
+            var lastNotificationTime = DateTime.Now;
+            while (true)
             {
-                scanTimer.Set(NextNearestMinute(DateTime.Now), TimeSpan.FromMinutes(ScanIntervalMinutes));
+                var modifiedTimestamps = TimestampExtractor.FindAllTimestamps(lastScanTime, lastNotificationTime);
+                lastScanTime = DateTime.Now;
+                timestamps.Update(modifiedTimestamps);
 
-                WaitHandle[] handles = {notificationTimer, scanTimer};
+                var closestTimestamp = FindClosestTimestamp(timestamps);
+                notificationTimer.Set(closestTimestamp, TimeSpan.Zero);
 
-                var timestamps = new Dictionary<string, List<Timestamp>>();
-                var lastScanTime = DateTime.MinValue;
-                var lastNotificationTime = DateTime.Now;
-                while (true)
-                {
-                    var modifiedTimestamps = TimestampExtractor.FindAllTimestamps(lastScanTime, lastNotificationTime);
-                    lastScanTime = DateTime.Now;
-                    timestamps.Update(modifiedTimestamps);
+                WaitHandle.WaitAny(handles);
 
-                    var closestTimestamp = FindClosestTimestamp(timestamps);
-                    notificationTimer.Set(closestTimestamp, TimeSpan.Zero);
-
-                    WaitHandle.WaitAny(handles);
-
-                    var now = DateTime.Now;
-                    Notify(timestamps, now, executable);
-                    lastNotificationTime = now;
-                }
+                var now = DateTime.Now;
+                Notify(timestamps, now, executable);
+                lastNotificationTime = now;
             }
         }
 

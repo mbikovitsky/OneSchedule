@@ -57,7 +57,7 @@ namespace OneSchedule
 
         private static Native.LargeInteger DueTimeToLargeInteger(DateTime dueTime)
         {
-            return new Native.LargeInteger {QuadPart = dueTime.ToFileTimeUtc()};
+            return new() {QuadPart = dueTime.ToFileTimeUtc()};
         }
 
         private static Native.LargeInteger DueTimeToLargeInteger(TimeSpan dueTime)
