@@ -10,9 +10,9 @@ namespace OneNoteDotNet
         {
         }
 
-        public string Color => Xml.Attribute("color")?.Value;
+        public string? Color => Xml.Attribute("color")?.Value;
 
-        public string Nickname => Xml.Attribute("nickname")?.Value;
+        public string? Nickname => Xml.Attribute("nickname")?.Value;
 
         public IEnumerable<Section> Sections => XmlElements(SectionTag).Select(element => new Section(element));
 

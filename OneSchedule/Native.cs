@@ -23,7 +23,7 @@ namespace OneSchedule
         public static extern SafeWaitHandle CreateWaitableTimer(
             IntPtr timerAttributes,
             [MarshalAs(UnmanagedType.Bool)] bool manualReset,
-            string timerName
+            string? timerName
         );
 
         [DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]

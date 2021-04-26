@@ -10,7 +10,7 @@ namespace OneNoteDotNet
         {
         }
 
-        public string Color => Xml.Attribute("color")?.Value;
+        public string? Color => Xml.Attribute("color")?.Value;
 
         public bool IsInRecycleBin => ParseBoolAttribute("isInRecycleBin").GetValueOrDefault(false);
 
