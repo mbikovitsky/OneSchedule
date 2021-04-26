@@ -17,7 +17,7 @@ namespace OneSchedule
             public IReadOnlyList<string> Executable { get; init; }
         }
 
-        private struct Message
+        private struct Notification
         {
             public DateTime Date { get; set; }
 
@@ -116,10 +116,10 @@ namespace OneSchedule
                     continue;
                 }
 
-                var message = new Message {Date = timestamp.Date, Comment = timestamp.Comment};
+                var notification = new Notification {Date = timestamp.Date, Comment = timestamp.Comment};
 
                 using var writer = new Utf8JsonWriter(process.StandardInput.BaseStream);
-                JsonSerializer.Serialize(writer, message,
+                JsonSerializer.Serialize(writer, notification,
                     new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
             }
 
