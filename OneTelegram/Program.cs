@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -12,6 +14,8 @@ namespace OneTelegram
     internal static class Program
     {
         private const string TokenEnvVar = "TELEGRAM_TOKEN";
+
+        private const string ChatIdEnvVar = "TELEGRAM_CHAT_ID";
 
         private static readonly TimeSpan UpdateInterval = new(0, 0, 0, 1);
 
@@ -44,6 +48,13 @@ namespace OneTelegram
             public long id { get; set; }
         }
 
+        private struct Notification
+        {
+            public DateTime Date { get; set; }
+
+            public string Comment { get; set; }
+        }
+
         private static async Task Main(string[] args)
         {
             var commandLineOptions = ParseCommandLine(args);
@@ -55,7 +66,7 @@ namespace OneTelegram
             var token = Environment.GetEnvironmentVariable(TokenEnvVar);
             if (null == token)
             {
-                await Console.Error.WriteLineAsync("Missing TOKEN environment variable");
+                await Console.Error.WriteLineAsync($"Missing {TokenEnvVar} environment variable");
                 return;
             }
 
@@ -63,6 +74,21 @@ namespace OneTelegram
             {
                 await DisplayChatIds(token);
             }
+
+            var chatIdString = Environment.GetEnvironmentVariable(ChatIdEnvVar);
+            if (null == chatIdString)
+            {
+                await Console.Error.WriteLineAsync($"Missing {ChatIdEnvVar} environment variable");
+                return;
+            }
+
+            if (!long.TryParse(chatIdString, out var chatId))
+            {
+                await Console.Error.WriteLineAsync($"Invalid chat ID specified");
+                return;
+            }
+
+            await SendNotification(token, chatId);
         }
 
         private static CommandLineOptions? ParseCommandLine(IEnumerable<string> args)
@@ -71,7 +97,7 @@ namespace OneTelegram
             var showHelp = false;
             var parserConfig = new OptionSet
             {
-                {"c|chat-ids", "only display chat IDs of received messages", arg => displayChatIds = arg != null},
+                {"d|display-chat-ids", "only display chat IDs of received messages", arg => displayChatIds = arg != null},
                 {"h|help", "this cruft", arg => showHelp = arg != null},
             };
             parserConfig.Parse(args);
@@ -126,6 +152,40 @@ namespace OneTelegram
 
                 await Task.Delay(UpdateInterval);
             }
+        }
+
+        private static async Task SendNotification(string token, long chatId)
+        {
+            var notification = await ReadNotification();
+
+            var encodedDate = WebUtility.HtmlEncode(notification.Date.ToString("f"));
+            var encodedComment = WebUtility.HtmlEncode(notification.Comment);
+
+            var messageHtml = $"<b>{encodedDate}</b>\n{encodedComment}";
+
+            var endpoint = $"https://api.telegram.org/bot{token}/sendMessage";
+            var parameters = new {chat_id = chatId, text = messageHtml, parse_mode = "HTML"};
+
+            using var client = new HttpClient();
+
+            var httpResponse = await client.PostAsJsonAsync(endpoint,parameters);
+            httpResponse.EnsureSuccessStatusCode();
+        }
+
+        private static async Task<Notification> ReadNotification()
+        {
+            await using var stdin = Console.OpenStandardInput();
+
+            await using var memoryStream = new MemoryStream();
+
+            await stdin.CopyToAsync(memoryStream);
+
+            memoryStream.Position = 0;
+
+            var notification = await JsonSerializer.DeserializeAsync<Notification>(memoryStream,
+                new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
+
+            return notification;
         }
     }
 }
