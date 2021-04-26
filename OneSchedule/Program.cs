@@ -14,12 +14,7 @@ namespace OneSchedule
 
         private readonly struct CommandLineOptions
         {
-            public readonly List<string> Executable;
-
-            public CommandLineOptions(List<string> executable)
-            {
-                Executable = executable;
-            }
+            public IReadOnlyList<string> Executable { get; init; }
         }
 
         private struct Message
@@ -42,26 +37,25 @@ namespace OneSchedule
 
         private static CommandLineOptions? ParseCommandLine(IEnumerable<string> args)
         {
-            var arguments = new List<string>();
             var showHelp = false;
             var parserConfig = new OptionSet
             {
                 {"h|help", "this cruft", arg => showHelp = arg != null},
-                {"<>", arg => arguments.Add(arg)},
             };
-            parserConfig.Parse(args);
+            var executableArguments = parserConfig.Parse(args);
 
-            if (!showHelp && arguments.Count > 0)
+            // ReSharper disable once InvertIf
+            if (showHelp || executableArguments.Count <= 0)
             {
-                return new CommandLineOptions(arguments);
+                var executableName = AppDomain.CurrentDomain.FriendlyName;
+                Console.WriteLine($"Usage: {executableName} [OPTIONS]+ program [ARGS]+");
+                Console.WriteLine();
+                parserConfig.WriteOptionDescriptions(Console.Out);
+
+                return null;
             }
 
-            var executableName = AppDomain.CurrentDomain.FriendlyName;
-            Console.WriteLine($"Usage: {executableName} [OPTIONS]+ program [ARGS]+");
-            Console.WriteLine();
-            parserConfig.WriteOptionDescriptions(Console.Out);
-
-            return null;
+            return new CommandLineOptions {Executable = executableArguments};
         }
 
         private static void Run(IReadOnlyList<string> executable)
