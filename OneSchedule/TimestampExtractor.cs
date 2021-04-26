@@ -13,7 +13,7 @@ namespace OneSchedule
         private const string TimestampFormat = "yyyy-MM-ddTHH:mmK";
 
         private static readonly Regex TimestampRegex =
-            new Regex(@"//(?<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2}))//");
+            new(@"//(?<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2}))//");
 
         public static Dictionary<string, List<Timestamp>> FindAllTimestamps(
             DateTime pagesModifiedAfter,
@@ -34,7 +34,7 @@ namespace OneSchedule
                 .Where(page => page.LastModifiedTime.GetValueOrDefault(pagesModifiedAfter) >= pagesModifiedAfter)
                 .Select(PageTimestamps)
                 .Where(pair => pair.Timestamps.Count > 0)
-                .ToDictionary(pair => pair.Id, tuple => tuple.Timestamps);
+                .ToDictionary(pair => pair.Id, pair => pair.Timestamps);
 
             return timestamps;
         }
