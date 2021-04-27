@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 using System.Xml.Linq;
 
 namespace OneNoteDotNet
@@ -10,9 +11,10 @@ namespace OneNoteDotNet
         {
         }
 
-        public string Name => Xml.Attribute("name")?.Value;
+        public string? Name => Xml.Attribute("name")?.Value;
 
-        public string Id => Xml.Attribute("ID")?.Value;
+        public string Id => Xml.Attribute("ID")?.Value ??
+                            throw new InvalidDataException("Hierarchy element without an ID");
 
         public DateTime? LastModifiedTime => ParseDateAttribute("lastModifiedTime");
 

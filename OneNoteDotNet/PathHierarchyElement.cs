@@ -8,6 +8,6 @@ namespace OneNoteDotNet
         {
         }
 
-        public string Path => Xml.Attribute("path")?.Value;
+        public string? Path => Xml.Attribute("path")?.Value;
     }
 }

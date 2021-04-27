@@ -24,9 +24,9 @@ namespace OneSchedule
             IReadOnlyDictionary<TKey, TValue> source
         )
         {
-            foreach (var pair in source)
+            foreach (var (key, value) in source)
             {
-                dictionary[pair.Key] = pair.Value;
+                dictionary[key] = value;
             }
         }
 
@@ -38,6 +38,21 @@ namespace OneSchedule
             {
                 dictionary.Remove(key);
             }
+        }
+
+        public static DateTime RoundUpToMinute(this DateTime dateTime)
+        {
+            if (dateTime.Second == 0 && dateTime.Millisecond == 0)
+            {
+                return dateTime;
+            }
+
+            var nextMinute = dateTime.AddMinutes(1);
+
+            var result = new DateTime(nextMinute.Year, nextMinute.Month, nextMinute.Day, nextMinute.Hour,
+                nextMinute.Minute, 0, 0, nextMinute.Kind);
+
+            return result;
         }
     }
 }
