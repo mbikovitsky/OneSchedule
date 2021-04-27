@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using Common;
 using Mono.Options;
 using OneNoteDotNet;
@@ -55,26 +54,24 @@ namespace OneSchedule
 
         private static void Run(IReadOnlyList<string> executable)
         {
+            // Since we're scanning every minute of the hour, and since the resolution of
+            // the timestamps is also a minute, a single timer is enough here.
+            // We don't need to monitor the closest notification time as well.
+
             using var scanTimer = new WaitableTimer(false);
-            using var notificationTimer = new WaitableTimer(false);
 
             scanTimer.Set(DateTime.Now.RoundUpToMinute(), TimeSpan.FromMinutes(ScanIntervalMinutes));
 
-            WaitHandle[] handles = {notificationTimer, scanTimer};
-
-            var timestamps = new Dictionary<string, List<Timestamp>>();
-            var lastScanTime = DateTime.MinValue;
-            var lastNotificationTime = DateTime.Now;
+            var timestamps = TimestampExtractor.FindAllTimestamps(DateTime.MinValue, DateTime.Now);
+            var lastScanTime = DateTime.Now;
+            var lastNotificationTime = lastScanTime;
             while (true)
             {
+                scanTimer.WaitOne();
+
                 var modifiedTimestamps = TimestampExtractor.FindAllTimestamps(lastScanTime, lastNotificationTime);
                 lastScanTime = DateTime.Now;
                 timestamps.Update(modifiedTimestamps);
-
-                var closestTimestamp = FindClosestTimestampTime(timestamps);
-                notificationTimer.Set(closestTimestamp, TimeSpan.Zero);
-
-                WaitHandle.WaitAny(handles);
 
                 CleanUpDanglingTimestamps(timestamps);
 
@@ -145,19 +142,6 @@ namespace OneSchedule
 
             notification.WriteToStream(process.StandardInput.BaseStream).RunSynchronously();
             process.StandardInput.Close();
-        }
-
-        /// <summary>
-        /// Finds the time of the closest timestamp in the dictionary.
-        /// </summary>
-        /// <param name="timestamps">Timestamps to look through</param>
-        private static DateTime FindClosestTimestampTime(IReadOnlyDictionary<string, List<Timestamp>> timestamps)
-        {
-            return timestamps.Values
-                .Flatten()
-                .Select(timestamp => timestamp.Date)
-                .DefaultIfEmpty(DateTime.MaxValue)
-                .Min();
         }
 
         /// <summary>
