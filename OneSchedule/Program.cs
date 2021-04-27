@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
+using Common;
 using Mono.Options;
 using OneNoteDotNet;
 
@@ -17,13 +17,6 @@ namespace OneSchedule
         private readonly struct CommandLineOptions
         {
             public IReadOnlyList<string> Executable { get; init; }
-        }
-
-        private struct Notification
-        {
-            public DateTime Date { get; set; }
-
-            public string Comment { get; set; }
         }
 
         private static void Main(string[] args)
@@ -150,11 +143,7 @@ namespace OneSchedule
 
             var notification = new Notification {Date = timestamp.Date, Comment = timestamp.Comment};
 
-            {
-                using var writer = new Utf8JsonWriter(process.StandardInput.BaseStream);
-                JsonSerializer.Serialize(writer, notification,
-                    new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
-            }
+            notification.WriteToStream(process.StandardInput.BaseStream).RunSynchronously();
             process.StandardInput.Close();
         }
 

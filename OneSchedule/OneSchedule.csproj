@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\OneNoteDotNet\OneNoteDotNet.csproj" />
   </ItemGroup>
   <ItemGroup>

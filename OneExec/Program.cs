@@ -1,25 +1,17 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using System.Threading.Tasks;
+using Common;
 
 namespace OneExec
 {
     internal class Program
     {
-        private struct Notification
-        {
-            public DateTime Date { get; set; }
-
-            public string Comment { get; set; }
-        }
-
         private static async Task Main()
         {
-            var notification = await ReadNotification();
+            var notification = await Notification.ReadFromStream(Console.OpenStandardInput());
 
             // The only reason we're doing this argument round-trip is because I can't be bothered
             // passing a gazillion parameters to CreateProcess.
@@ -44,25 +36,6 @@ namespace OneExec
                 await Console.Error.WriteLineAsync($"Failed starting process '{arguments[0]}'");
                 return;
             }
-        }
-
-        /// <summary>
-        /// Reads a notification structure from stdin.
-        /// </summary>
-        private static async Task<Notification> ReadNotification()
-        {
-            await using var stdin = Console.OpenStandardInput();
-
-            await using var memoryStream = new MemoryStream();
-
-            await stdin.CopyToAsync(memoryStream);
-
-            memoryStream.Position = 0;
-
-            var notification = await JsonSerializer.DeserializeAsync<Notification>(memoryStream,
-                new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
-
-            return notification;
         }
 
         private static string[] CommandLineToArgv(string commandLine)
