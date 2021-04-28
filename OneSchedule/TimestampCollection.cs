@@ -67,7 +67,8 @@ namespace OneSchedule
         }
 
         /// <summary>
-        /// Deletes all timestamps that are no longer present in OneNote.
+        /// Deletes all timestamps that are defined in deleted pages, and deletes all pages
+        /// with no timestamps in them from the collection.
         /// </summary>
         private void CleanUp(OneNote oneNote)
         {
@@ -76,7 +77,7 @@ namespace OneSchedule
                 .Select(page => page.Id)
                 .ToImmutableHashSet();
 
-            _timestamps.RemoveAllKeys(pair => !existingPageIds.Contains(pair.Key));
+            _timestamps.RemoveAllKeys(pair => pair.Value.Count <= 0 || !existingPageIds.Contains(pair.Key));
         }
 
         private static Dictionary<string, List<Timestamp>> FindAllTimestamps(
@@ -97,7 +98,6 @@ namespace OneSchedule
                 .Where(page => !page.IsInRecycleBin)
                 .Where(page => page.LastModifiedTime.GetValueOrDefault(pagesModifiedAfter) >= pagesModifiedAfter)
                 .Select(PageTimestamps)
-                .Where(pair => pair.Timestamps.Count > 0)
                 .ToDictionary(pair => pair.Id, pair => pair.Timestamps);
 
             return timestamps;
