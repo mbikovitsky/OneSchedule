@@ -69,6 +69,7 @@ namespace OneSchedule
                 lastNotificationTime = DateTime.Now;
                 foreach (var timestamp in collection.Remove(lastNotificationTime))
                 {
+                    Console.WriteLine($"{timestamp.Date:g} - {timestamp.Comment}");
                     LaunchNotificationProcess(executable, timestamp);
                 }
 
