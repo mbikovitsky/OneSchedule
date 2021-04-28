@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Common;
 using Mono.Options;
 
 namespace OneTelegram
@@ -46,13 +46,6 @@ namespace OneTelegram
         private struct Chat
         {
             public long id { get; set; }
-        }
-
-        private struct Notification
-        {
-            public DateTime Date { get; set; }
-
-            public string Comment { get; set; }
         }
 
         private static async Task Main(string[] args)
@@ -172,7 +165,7 @@ namespace OneTelegram
         /// <param name="chatId">Chat ID where to send the notification</param>
         private static async Task SendNotification(string token, long chatId)
         {
-            var notification = await ReadNotification();
+            var notification = await Notification.ReadFromStream(Console.OpenStandardInput());
 
             var encodedDate = WebUtility.HtmlEncode(notification.Date.ToString("f"));
             var encodedComment = WebUtility.HtmlEncode(notification.Comment);
@@ -186,25 +179,6 @@ namespace OneTelegram
 
             var httpResponse = await client.PostAsJsonAsync(endpoint, parameters);
             httpResponse.EnsureSuccessStatusCode();
-        }
-
-        /// <summary>
-        /// Reads a notification structure from stdin.
-        /// </summary>
-        private static async Task<Notification> ReadNotification()
-        {
-            await using var stdin = Console.OpenStandardInput();
-
-            await using var memoryStream = new MemoryStream();
-
-            await stdin.CopyToAsync(memoryStream);
-
-            memoryStream.Position = 0;
-
-            var notification = await JsonSerializer.DeserializeAsync<Notification>(memoryStream,
-                new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
-
-            return notification;
         }
     }
 }
