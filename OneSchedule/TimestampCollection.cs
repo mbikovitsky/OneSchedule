@@ -71,7 +71,10 @@ namespace OneSchedule
         /// </summary>
         private void CleanUp(OneNote oneNote)
         {
-            var existingPageIds = oneNote.Hierarchy.AllPages.Select(page => page.Id).ToImmutableHashSet();
+            var existingPageIds = oneNote.Hierarchy.AllPages
+                .Where(page => !page.IsInRecycleBin)
+                .Select(page => page.Id)
+                .ToImmutableHashSet();
 
             _timestamps.RemoveAllKeys(pair => !existingPageIds.Contains(pair.Key));
         }
@@ -91,6 +94,7 @@ namespace OneSchedule
             }
 
             var timestamps = oneNote.Hierarchy.AllPages
+                .Where(page => !page.IsInRecycleBin)
                 .Where(page => page.LastModifiedTime.GetValueOrDefault(pagesModifiedAfter) >= pagesModifiedAfter)
                 .Select(PageTimestamps)
                 .Where(pair => pair.Timestamps.Count > 0)
