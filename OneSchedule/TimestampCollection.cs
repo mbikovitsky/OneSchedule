@@ -34,11 +34,13 @@ namespace OneSchedule
         /// <param name="after">Only timestamps after this time will be added.</param>
         public void Update(DateTime after)
         {
-            var modifiedTimestamps = FindAllTimestamps(_lastUpdateTime, after);
+            var oneNote = new OneNote();
+
+            var modifiedTimestamps = FindAllTimestamps(oneNote, _lastUpdateTime, after);
             _lastUpdateTime = DateTime.Now;
             _timestamps.Update(modifiedTimestamps);
 
-            CleanUp();
+            CleanUp(oneNote);
         }
 
         /// <summary>
@@ -67,22 +69,19 @@ namespace OneSchedule
         /// <summary>
         /// Deletes all timestamps that are no longer present in OneNote.
         /// </summary>
-        private void CleanUp()
+        private void CleanUp(OneNote oneNote)
         {
-            var application = new OneNote();
-
-            var existingPageIds = application.Hierarchy.AllPages.Select(page => page.Id).ToImmutableHashSet();
+            var existingPageIds = oneNote.Hierarchy.AllPages.Select(page => page.Id).ToImmutableHashSet();
 
             _timestamps.RemoveAllKeys(pair => !existingPageIds.Contains(pair.Key));
         }
 
         private static Dictionary<string, List<Timestamp>> FindAllTimestamps(
+            OneNote oneNote,
             DateTime pagesModifiedAfter,
             DateTime timestampsAfter
         )
         {
-            var oneNote = new OneNote();
-
             (string Id, List<Timestamp> Timestamps) PageTimestamps(Page page)
             {
                 return (
