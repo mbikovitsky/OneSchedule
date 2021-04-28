@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using Common;
 using Mono.Options;
-using OneNoteDotNet;
 
 namespace OneSchedule
 {
@@ -62,52 +60,20 @@ namespace OneSchedule
 
             scanTimer.Set(DateTime.Now.Ceil(ScanInterval), ScanInterval);
 
-            var timestamps = new Dictionary<string, List<Timestamp>>();
-            var lastScanTime = DateTime.MinValue;
+            var collection = new TimestampCollection();
             var lastNotificationTime = DateTime.Now;
             while (true)
             {
-                var modifiedTimestamps = TimestampExtractor.FindAllTimestamps(lastScanTime, lastNotificationTime);
-                lastScanTime = DateTime.Now;
-                timestamps.Update(modifiedTimestamps);
+                collection.Update(lastNotificationTime);
 
-                CleanUpDanglingTimestamps(timestamps);
-
-                var now = DateTime.Now;
-                Notify(timestamps, now, executable);
-                lastNotificationTime = now;
+                lastNotificationTime = DateTime.Now;
+                foreach (var timestamp in collection.Remove(lastNotificationTime))
+                {
+                    LaunchNotificationProcess(executable, timestamp);
+                }
 
                 scanTimer.WaitOne();
             }
-        }
-
-        /// <summary>
-        /// Starts a notification process for all timestamps <paramref name="until"/> the specified
-        /// time, then removes the timestamps from the dictionary.
-        /// </summary>
-        /// <param name="timestamps">Timestamps to look through</param>
-        /// <param name="until">Upper bound on times to send notifications for</param>
-        /// <param name="executable">Executable and arguments to launch</param>
-        private static void Notify(IDictionary<string, List<Timestamp>> timestamps, DateTime until,
-            IReadOnlyList<string> executable)
-        {
-            var toNotify = timestamps.Values
-                .Select(list => list.TakeWhile(timestamp => timestamp.Date <= until))
-                .Flatten()
-                .ToHashSet();
-
-            foreach (var timestamp in toNotify)
-            {
-                LaunchNotificationProcess(executable, timestamp);
-            }
-
-            foreach (var list in timestamps.Values)
-            {
-                list.RemoveAll(timestamp => toNotify.Contains(timestamp));
-            }
-
-
-            timestamps.RemoveAllKeys(pair => pair.Value.Count == 0);
         }
 
         /// <summary>
@@ -142,19 +108,6 @@ namespace OneSchedule
 
             notification.WriteToStream(process.StandardInput.BaseStream).RunSynchronously();
             process.StandardInput.Close();
-        }
-
-        /// <summary>
-        /// Deletes all timestamps defined in deleted pages.
-        /// </summary>
-        /// <param name="timestamps">Timestamps to clean up</param>
-        private static void CleanUpDanglingTimestamps(IDictionary<string, List<Timestamp>> timestamps)
-        {
-            var application = new OneNote();
-
-            var existingPageIds = application.Hierarchy.AllPages.Select(page => page.Id).ToImmutableHashSet();
-
-            timestamps.RemoveAllKeys(pair => !existingPageIds.Contains(pair.Key));
         }
     }
 }
