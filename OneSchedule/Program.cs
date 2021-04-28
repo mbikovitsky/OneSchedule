@@ -107,7 +107,7 @@ namespace OneSchedule
 
             var notification = new Notification {Date = timestamp.Date, Comment = timestamp.Comment};
 
-            notification.WriteToStream(process.StandardInput.BaseStream).RunSynchronously();
+            notification.WriteToStream(process.StandardInput.BaseStream).Wait();
             process.StandardInput.Close();
         }
     }
