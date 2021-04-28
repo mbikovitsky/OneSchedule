@@ -4,6 +4,10 @@
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
   <ItemGroup>
     <COMReference Include="Microsoft.Office.Interop.OneNote">
       <Guid>{0EA692EE-BB50-4E3C-AEF0-356D91732725}</Guid>
