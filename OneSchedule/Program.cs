@@ -11,7 +11,7 @@ namespace OneSchedule
 {
     internal static class Program
     {
-        private const double ScanIntervalMinutes = 1;
+        private static readonly TimeSpan ScanInterval = TimeSpan.FromMinutes(1);
 
         private readonly struct CommandLineOptions
         {
@@ -60,7 +60,7 @@ namespace OneSchedule
 
             using var scanTimer = new WaitableTimer(false);
 
-            scanTimer.Set(DateTime.Now.RoundUpToMinute(), TimeSpan.FromMinutes(ScanIntervalMinutes));
+            scanTimer.Set(DateTime.Now.Ceil(ScanInterval), ScanInterval);
 
             var timestamps = TimestampExtractor.FindAllTimestamps(DateTime.MinValue, DateTime.Now);
             var lastScanTime = DateTime.Now;

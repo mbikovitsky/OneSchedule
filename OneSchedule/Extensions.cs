@@ -40,19 +40,13 @@ namespace OneSchedule
             }
         }
 
-        public static DateTime RoundUpToMinute(this DateTime dateTime)
+        public static DateTime Ceil(this DateTime dateTime, TimeSpan span)
         {
-            if (dateTime.Second == 0 && dateTime.Millisecond == 0)
-            {
-                return dateTime;
-            }
+            // https://stackoverflow.com/a/1393726/851560
 
-            var nextMinute = dateTime.AddMinutes(1);
+            var wholeSpans = (dateTime.Ticks + span.Ticks - 1) / span.Ticks;
 
-            var result = new DateTime(nextMinute.Year, nextMinute.Month, nextMinute.Day, nextMinute.Hour,
-                nextMinute.Minute, 0, 0, nextMinute.Kind);
-
-            return result;
+            return new DateTime(wholeSpans * span.Ticks, dateTime.Kind);
         }
     }
 }
