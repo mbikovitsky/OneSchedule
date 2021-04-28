@@ -62,13 +62,11 @@ namespace OneSchedule
 
             scanTimer.Set(DateTime.Now.Ceil(ScanInterval), ScanInterval);
 
-            var timestamps = TimestampExtractor.FindAllTimestamps(DateTime.MinValue, DateTime.Now);
-            var lastScanTime = DateTime.Now;
-            var lastNotificationTime = lastScanTime;
+            var timestamps = new Dictionary<string, List<Timestamp>>();
+            var lastScanTime = DateTime.MinValue;
+            var lastNotificationTime = DateTime.Now;
             while (true)
             {
-                scanTimer.WaitOne();
-
                 var modifiedTimestamps = TimestampExtractor.FindAllTimestamps(lastScanTime, lastNotificationTime);
                 lastScanTime = DateTime.Now;
                 timestamps.Update(modifiedTimestamps);
@@ -78,6 +76,8 @@ namespace OneSchedule
                 var now = DateTime.Now;
                 Notify(timestamps, now, executable);
                 lastNotificationTime = now;
+
+                scanTimer.WaitOne();
             }
         }
 
