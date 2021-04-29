@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.ComponentModel;
 using System.Threading;
 
 namespace OneSchedule
@@ -11,7 +11,7 @@ namespace OneSchedule
             SafeWaitHandle = Native.CreateWaitableTimer(IntPtr.Zero, manualReset, null);
             if (SafeWaitHandle.IsInvalid)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                throw new Win32Exception();
             }
         }
 
@@ -27,7 +27,7 @@ namespace OneSchedule
             );
             if (!success)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                throw new Win32Exception();
             }
         }
 
@@ -43,7 +43,7 @@ namespace OneSchedule
             );
             if (!success)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                throw new Win32Exception();
             }
         }
 
@@ -51,7 +51,7 @@ namespace OneSchedule
         {
             if (!Native.CancelWaitableTimer(SafeWaitHandle))
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                throw new Win32Exception();
             }
         }
 

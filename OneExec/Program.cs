@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -43,7 +44,7 @@ namespace OneExec
             var argv = Native.CommandLineToArgvW(commandLine, out var argc);
             if (argv == IntPtr.Zero)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                throw new Win32Exception();
             }
 
             try
