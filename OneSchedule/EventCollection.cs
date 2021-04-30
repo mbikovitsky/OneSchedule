@@ -20,7 +20,7 @@ namespace OneSchedule
         /// A map of OneNote page ID to an <b>ordered</b> (by time) list of events found
         /// on that page.
         /// </summary>
-        private readonly Dictionary<string, List<Event>> _events = new();
+        private readonly Dictionary<string, LinkedList<Event>> _events = new();
 
         // Yes, we're using DateTimeOffset to track updates because we're comparing it to page
         // modification times. The assumption is that page modification times are in local time,
@@ -73,20 +73,33 @@ namespace OneSchedule
         /// <param name="until">Only events before this time will be returned.</param>
         private IEnumerable<Event> Remove(DateTimeOffset until)
         {
-            var toRemove = _events.Values
-                .Select(list => list.TakeWhile(@event => @event.Date <= until))
-                .Flatten()
-                .ToHashSet();
+            var toRemove = new List<LinkedListNode<Event>>();
 
             foreach (var list in _events.Values)
             {
-                list.RemoveAll(@event => toRemove.Contains(@event));
+                for (var node = list.First; node != null; node = node.Next)
+                {
+                    if (node.Value.Date <= until)
+                    {
+                        toRemove.Add(node);
+                    }
+                    else
+                    {
+                        // The lists are sorted, so we can stop early.
+                        break;
+                    }
+                }
             }
 
+            foreach (var node in toRemove)
+            {
+                Debug.Assert(node.List != null, "node.List != null");
+                node.List.Remove(node);
+            }
 
             _events.RemoveAllKeys(pair => pair.Value.Count == 0);
 
-            return toRemove;
+            return toRemove.Select(node => node.Value);
         }
 
         /// <summary>
@@ -103,17 +116,17 @@ namespace OneSchedule
             _events.RemoveAllKeys(pair => pair.Value.Count <= 0 || !existingPageIds.Contains(pair.Key));
         }
 
-        private static Dictionary<string, List<Event>> FindAllEvents(
+        private static Dictionary<string, LinkedList<Event>> FindAllEvents(
             OneNote oneNote,
             DateTimeOffset pagesModifiedAfter,
             DateTimeOffset eventsAfter
         )
         {
-            (string Id, List<Event> Events) PageEvents(Page page)
+            (string Id, LinkedList<Event> Events) PageEvents(Page page)
             {
                 return (
                     page.Id,
-                    FindEventsInPage(oneNote.GetPageContent(page.Id, PageInfo.Basic), eventsAfter).ToList()
+                    new LinkedList<Event>(FindEventsInPage(oneNote.GetPageContent(page.Id, PageInfo.Basic), eventsAfter))
                 );
             }
 
