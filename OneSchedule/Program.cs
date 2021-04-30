@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Common;
 using Mono.Options;
 
@@ -52,14 +53,6 @@ namespace OneSchedule
 
         private static void Run(IReadOnlyList<string> executable)
         {
-            // Since we're scanning every minute of the hour, and since the resolution of
-            // the event timestamps is also a minute, a single timer is enough here.
-            // We don't need to monitor the closest notification time as well.
-
-            using var scanTimer = new WaitableTimer(false);
-
-            scanTimer.Set(DateTimeOffset.Now.Ceil(ScanInterval), ScanInterval);
-
             var collection = new EventCollection();
             while (true)
             {
@@ -69,8 +62,15 @@ namespace OneSchedule
                     LaunchNotificationProcess(executable, @event);
                 });
 
-                scanTimer.WaitOne();
+                Sleep();
             }
+        }
+
+        private static void Sleep()
+        {
+            var now = DateTimeOffset.Now;
+            var toSleep = now.Ceil(ScanInterval) - now;
+            Thread.Sleep(toSleep);
         }
 
         /// <summary>
