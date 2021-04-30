@@ -9,18 +9,18 @@ using OneNoteDotNet;
 
 namespace OneSchedule
 {
-    internal class TimestampCollection
+    internal class EventCollection
     {
-        private const string TimestampFormat = "yyyy-MM-ddTHH:mmK";
+        private const string EventTimestampFormat = "yyyy-MM-ddTHH:mmK";
 
-        private static readonly Regex TimestampRegex =
+        private static readonly Regex EventTimestampRegex =
             new(@"//(?<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2}))//");
 
         /// <summary>
-        /// A map of OneNote page ID to an <b>ordered</b> (by time) list of timestamps found
+        /// A map of OneNote page ID to an <b>ordered</b> (by time) list of events found
         /// on that page.
         /// </summary>
-        private readonly Dictionary<string, List<Timestamp>> _timestamps = new();
+        private readonly Dictionary<string, List<Event>> _events = new();
 
         // Yes, we're using DateTimeOffset to track updates because we're comparing it to page
         // modification times. The assumption is that page modification times are in local time,
@@ -29,21 +29,21 @@ namespace OneSchedule
 
         private DateTimeOffset _lastNotificationTime = DateTimeOffset.Now;
 
-        public void Notify(Action<Timestamp> callback)
+        public void Notify(Action<Event> callback)
         {
             Update();
 
             var now = DateTimeOffset.Now;
-            foreach (var timestamp in Remove(now))
+            foreach (var @event in Remove(now))
             {
-                callback.Invoke(timestamp);
+                callback.Invoke(@event);
             }
 
             _lastNotificationTime = now;
         }
 
         /// <summary>
-        /// Updates the collection from OneNote, adding any new timestamps that were
+        /// Updates the collection from OneNote, adding any new events that were
         /// added after the last notification, and deleting stale ones.
         /// </summary>
         private void Update()
@@ -54,44 +54,44 @@ namespace OneSchedule
             if (_lastUpdateTime > now)
             {
                 // Clock jumped backwards. Rebuild the database just to be safe.
-                _timestamps.Clear();
+                _events.Clear();
                 _lastNotificationTime = DateTimeOffset.MinValue;
                 _lastNotificationTime = now;
             }
 
-            var modifiedTimestamps = FindAllTimestamps(oneNote, _lastUpdateTime, _lastNotificationTime);
+            var modifiedEvents = FindAllEvents(oneNote, _lastUpdateTime, _lastNotificationTime);
             _lastUpdateTime = DateTimeOffset.Now;
-            _timestamps.Update(modifiedTimestamps);
+            _events.Update(modifiedEvents);
 
             CleanUp(oneNote);
         }
 
         /// <summary>
-        /// Extracts all timestamps <paramref name="until"/> the specified time, and deletes
+        /// Extracts all events <paramref name="until"/> the specified time, and deletes
         /// them from the collection.
         /// </summary>
-        /// <param name="until">Only timestamps before this time will be returned.</param>
-        private IEnumerable<Timestamp> Remove(DateTimeOffset until)
+        /// <param name="until">Only events before this time will be returned.</param>
+        private IEnumerable<Event> Remove(DateTimeOffset until)
         {
-            var toRemove = _timestamps.Values
-                .Select(list => list.TakeWhile(timestamp => timestamp.Date <= until))
+            var toRemove = _events.Values
+                .Select(list => list.TakeWhile(@event => @event.Date <= until))
                 .Flatten()
                 .ToHashSet();
 
-            foreach (var list in _timestamps.Values)
+            foreach (var list in _events.Values)
             {
-                list.RemoveAll(timestamp => toRemove.Contains(timestamp));
+                list.RemoveAll(@event => toRemove.Contains(@event));
             }
 
 
-            _timestamps.RemoveAllKeys(pair => pair.Value.Count == 0);
+            _events.RemoveAllKeys(pair => pair.Value.Count == 0);
 
             return toRemove;
         }
 
         /// <summary>
-        /// Deletes all timestamps that are defined in deleted pages, and deletes all pages
-        /// with no timestamps in them from the collection.
+        /// Deletes all events that are defined in deleted pages, and deletes all pages
+        /// with no events in them from the collection.
         /// </summary>
         private void CleanUp(OneNote oneNote)
         {
@@ -100,62 +100,62 @@ namespace OneSchedule
                 .Select(page => page.Id)
                 .ToImmutableHashSet();
 
-            _timestamps.RemoveAllKeys(pair => pair.Value.Count <= 0 || !existingPageIds.Contains(pair.Key));
+            _events.RemoveAllKeys(pair => pair.Value.Count <= 0 || !existingPageIds.Contains(pair.Key));
         }
 
-        private static Dictionary<string, List<Timestamp>> FindAllTimestamps(
+        private static Dictionary<string, List<Event>> FindAllEvents(
             OneNote oneNote,
             DateTimeOffset pagesModifiedAfter,
-            DateTimeOffset timestampsAfter
+            DateTimeOffset eventsAfter
         )
         {
-            (string Id, List<Timestamp> Timestamps) PageTimestamps(Page page)
+            (string Id, List<Event> Events) PageEvents(Page page)
             {
                 return (
                     page.Id,
-                    FindTimestampsInPage(oneNote.GetPageContent(page.Id, PageInfo.Basic), timestampsAfter).ToList()
+                    FindEventsInPage(oneNote.GetPageContent(page.Id, PageInfo.Basic), eventsAfter).ToList()
                 );
             }
 
-            var timestamps = oneNote.Hierarchy.AllPages
+            var events = oneNote.Hierarchy.AllPages
                 .Where(page => !page.IsInRecycleBin)
                 .Where(page => page.LastModifiedTime.GetValueOrDefault(pagesModifiedAfter) >= pagesModifiedAfter)
-                .Select(PageTimestamps)
-                .ToDictionary(pair => pair.Id, pair => pair.Timestamps);
+                .Select(PageEvents)
+                .ToDictionary(pair => pair.Id, pair => pair.Events);
 
-            return timestamps;
+            return events;
         }
 
-        private static IEnumerable<Timestamp> FindTimestampsInPage(PageContent pageContent, DateTimeOffset after)
+        private static IEnumerable<Event> FindEventsInPage(PageContent pageContent, DateTimeOffset after)
         {
             return pageContent.PlainTextElements
                 .Where(element => !string.IsNullOrWhiteSpace(element))
-                .Select(FindTimestampsInString)
+                .Select(FindEventsInString)
                 .Flatten()
-                .Where(timestamp => timestamp.Date >= after)
-                .OrderBy(timestamp => timestamp.Date);
+                .Where(@event => @event.Date >= after)
+                .OrderBy(@event => @event.Date);
         }
 
-        private static IEnumerable<Timestamp> FindTimestampsInString(string input)
+        private static IEnumerable<Event> FindEventsInString(string input)
         {
-            var (remainder, matches) = TimestampRegex.Remove(input);
+            var (remainder, matches) = EventTimestampRegex.Remove(input);
             remainder = remainder.Trim();
             foreach (Match match in matches)
             {
                 Debug.Assert(match.Success);
 
-                if (!ParseTimestamp(match.Groups["timestamp"].Value, out var timestamp))
+                if (!ParseEventTimestamp(match.Groups["timestamp"].Value, out var timestamp))
                 {
                     continue;
                 }
 
-                yield return new Timestamp(timestamp, remainder);
+                yield return new Event(timestamp, remainder);
             }
         }
 
-        private static bool ParseTimestamp(string timestampString, out DateTimeOffset timestamp)
+        private static bool ParseEventTimestamp(string timestampString, out DateTimeOffset timestamp)
         {
-            return DateTimeOffset.TryParseExact(timestampString, TimestampFormat, CultureInfo.InvariantCulture,
+            return DateTimeOffset.TryParseExact(timestampString, EventTimestampFormat, CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out timestamp);
         }
     }

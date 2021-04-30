@@ -2,19 +2,19 @@
 
 namespace OneSchedule
 {
-    internal class Timestamp : IEquatable<Timestamp>
+    internal class Event : IEquatable<Event>
     {
         public DateTimeOffset Date { get; }
 
         public string Comment { get; }
 
-        public Timestamp(DateTimeOffset date, string comment)
+        public Event(DateTimeOffset date, string comment)
         {
             Date = date;
             Comment = comment;
         }
 
-        public bool Equals(Timestamp? other)
+        public bool Equals(Event? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -26,7 +26,7 @@ namespace OneSchedule
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((Timestamp) obj);
+            return Equals((Event) obj);
         }
 
         public override int GetHashCode()
@@ -34,12 +34,12 @@ namespace OneSchedule
             return HashCode.Combine(Date, Comment);
         }
 
-        public static bool operator ==(Timestamp? left, Timestamp? right)
+        public static bool operator ==(Event? left, Event? right)
         {
             return Equals(left, right);
         }
 
-        public static bool operator !=(Timestamp? left, Timestamp? right)
+        public static bool operator !=(Event? left, Event? right)
         {
             return !Equals(left, right);
         }

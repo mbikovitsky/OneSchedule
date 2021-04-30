@@ -53,20 +53,20 @@ namespace OneSchedule
         private static void Run(IReadOnlyList<string> executable)
         {
             // Since we're scanning every minute of the hour, and since the resolution of
-            // the timestamps is also a minute, a single timer is enough here.
+            // the event timestamps is also a minute, a single timer is enough here.
             // We don't need to monitor the closest notification time as well.
 
             using var scanTimer = new WaitableTimer(false);
 
             scanTimer.Set(DateTimeOffset.Now.Ceil(ScanInterval), ScanInterval);
 
-            var collection = new TimestampCollection();
+            var collection = new EventCollection();
             while (true)
             {
-                collection.Notify(timestamp =>
+                collection.Notify(@event =>
                 {
-                    Console.WriteLine($"{timestamp.Date:g} - {timestamp.Comment}");
-                    LaunchNotificationProcess(executable, timestamp);
+                    Console.WriteLine($"{@event.Date:g} - {@event.Comment}");
+                    LaunchNotificationProcess(executable, @event);
                 });
 
                 scanTimer.WaitOne();
@@ -75,11 +75,11 @@ namespace OneSchedule
 
         /// <summary>
         /// Launches a process with the given arguments and passes a <see cref="Notification"/>
-        /// for the given <paramref name="timestamp"/> over <c>stdin</c>.
+        /// for the given <paramref name="event"/> over <c>stdin</c>.
         /// </summary>
         /// <param name="executable">Executable and arguments for the process</param>
-        /// <param name="timestamp">Timestamp to notify</param>
-        private static void LaunchNotificationProcess(IReadOnlyList<string> executable, Timestamp timestamp)
+        /// <param name="event">Event to notify about</param>
+        private static void LaunchNotificationProcess(IReadOnlyList<string> executable, Event @event)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -101,7 +101,7 @@ namespace OneSchedule
                 return;
             }
 
-            var notification = new Notification(timestamp.Date, timestamp.Comment);
+            var notification = new Notification(@event.Date, @event.Comment);
 
             notification.WriteToStream(process.StandardInput.BaseStream).Wait();
             process.StandardInput.Close();
