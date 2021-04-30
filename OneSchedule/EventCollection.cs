@@ -122,19 +122,17 @@ namespace OneSchedule
             DateTimeOffset eventsAfter
         )
         {
-            (string Id, LinkedList<Event> Events) PageEvents(Page page)
-            {
-                return (
-                    page.Id,
-                    new LinkedList<Event>(FindEventsInPage(oneNote.GetPageContent(page.Id, PageInfo.Basic), eventsAfter))
-                );
-            }
-
-            var events = oneNote.Hierarchy.AllPages
-                .Where(page => !page.IsInRecycleBin)
-                .Where(page => page.LastModifiedTime.GetValueOrDefault(pagesModifiedAfter) >= pagesModifiedAfter)
-                .Select(PageEvents)
-                .ToDictionary(pair => pair.Id, pair => pair.Events);
+            var events = new Dictionary<string, LinkedList<Event>>(
+                oneNote.Hierarchy.AllPages
+                    .Where(page => !page.IsInRecycleBin)
+                    .Where(page =>
+                        page.LastModifiedTime.GetValueOrDefault(pagesModifiedAfter) >= pagesModifiedAfter)
+                    .Select(page => new KeyValuePair<string, LinkedList<Event>>(
+                        page.Id,
+                        new LinkedList<Event>(
+                            FindEventsInPage(oneNote.GetPageContent(page.Id, PageInfo.Basic), eventsAfter))
+                    ))
+            );
 
             return events;
         }
