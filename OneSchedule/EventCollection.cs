@@ -97,8 +97,6 @@ namespace OneSchedule
                 node.List.Remove(node);
             }
 
-            _events.RemoveAllKeys(pair => pair.Value.Count == 0);
-
             return toRemove.Select(node => node.Value);
         }
 
