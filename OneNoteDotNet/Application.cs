@@ -16,13 +16,13 @@ namespace OneNoteDotNet
     /// more than necessary and impacting user experience.</para>
     /// </remarks>
     [SupportedOSPlatform("windows")]
-    public sealed class OneNote : IDisposable
+    public sealed class Application : IDisposable
     {
-        private Application? _application;
+        private Microsoft.Office.Interop.OneNote.Application? _application;
 
-        public OneNote()
+        public Application()
         {
-            _application = new Application();
+            _application = new Microsoft.Office.Interop.OneNote.Application();
         }
 
         public void Dispose()
@@ -47,7 +47,7 @@ namespace OneNoteDotNet
             {
                 if (_application == null)
                 {
-                    throw new ObjectDisposedException(nameof(OneNote));
+                    throw new ObjectDisposedException(nameof(Application));
                 }
 
                 _application.GetHierarchy(null, HierarchyScope.hsPages, out var xmlString, XMLSchema.xs2013);
@@ -60,7 +60,7 @@ namespace OneNoteDotNet
         {
             if (_application == null)
             {
-                throw new ObjectDisposedException(nameof(OneNote));
+                throw new ObjectDisposedException(nameof(Application));
             }
 
             var mappedPagedInfo = MapPageInfo(pageInfo);

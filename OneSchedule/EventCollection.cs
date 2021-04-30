@@ -50,7 +50,7 @@ namespace OneSchedule
         /// </summary>
         private void Update()
         {
-            using var oneNote = new OneNote();
+            using var application = new Application();
 
             var now = DateTimeOffset.Now;
             if (_lastUpdateTime > now)
@@ -61,11 +61,11 @@ namespace OneSchedule
                 _lastNotificationTime = now;
             }
 
-            var modifiedEvents = FindAllEvents(oneNote, _lastUpdateTime, _lastNotificationTime);
+            var modifiedEvents = FindAllEvents(application, _lastUpdateTime, _lastNotificationTime);
             _lastUpdateTime = DateTimeOffset.Now;
             _events.Update(modifiedEvents);
 
-            CleanUp(oneNote);
+            CleanUp(application);
         }
 
         /// <summary>
@@ -106,9 +106,9 @@ namespace OneSchedule
         /// Deletes all events that are defined in deleted pages, and deletes all pages
         /// with no events in them from the collection.
         /// </summary>
-        private void CleanUp(OneNote oneNote)
+        private void CleanUp(Application application)
         {
-            var existingPageIds = oneNote.Hierarchy.AllPages
+            var existingPageIds = application.Hierarchy.AllPages
                 .Where(page => !page.IsInRecycleBin)
                 .Select(page => page.Id)
                 .ToImmutableHashSet();
@@ -117,20 +117,20 @@ namespace OneSchedule
         }
 
         private static Dictionary<string, LinkedList<Event>> FindAllEvents(
-            OneNote oneNote,
+            Application application,
             DateTimeOffset pagesModifiedAfter,
             DateTimeOffset eventsAfter
         )
         {
             var events = new Dictionary<string, LinkedList<Event>>(
-                oneNote.Hierarchy.AllPages
+                application.Hierarchy.AllPages
                     .Where(page => !page.IsInRecycleBin)
                     .Where(page =>
                         page.LastModifiedTime.GetValueOrDefault(pagesModifiedAfter) >= pagesModifiedAfter)
                     .Select(page => new KeyValuePair<string, LinkedList<Event>>(
                         page.Id,
                         new LinkedList<Event>(
-                            FindEventsInPage(oneNote.GetPageContent(page.Id, PageInfo.Basic), eventsAfter))
+                            FindEventsInPage(application.GetPageContent(page.Id, PageInfo.Basic), eventsAfter))
                     ))
             );
 
