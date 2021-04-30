@@ -4,11 +4,13 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 using OneNoteDotNet;
 
 namespace OneSchedule
 {
+    [SupportedOSPlatform("windows")]
     internal class EventCollection
     {
         private const string EventTimestampFormat = "yyyy-MM-ddTHH:mmK";
@@ -48,7 +50,7 @@ namespace OneSchedule
         /// </summary>
         private void Update()
         {
-            var oneNote = new OneNote();
+            using var oneNote = new OneNote();
 
             var now = DateTimeOffset.Now;
             if (_lastUpdateTime > now)

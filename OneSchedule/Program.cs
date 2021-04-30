@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading;
 using Common;
 using Mono.Options;
 
 namespace OneSchedule
 {
+    [SupportedOSPlatform("windows")]
     internal static class Program
     {
         private static readonly TimeSpan ScanInterval = TimeSpan.FromMinutes(1);
