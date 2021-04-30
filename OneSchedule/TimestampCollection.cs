@@ -33,11 +33,13 @@ namespace OneSchedule
         {
             Update();
 
-            _lastNotificationTime = DateTimeOffset.Now;
-            foreach (var timestamp in Remove(_lastNotificationTime))
+            var now = DateTimeOffset.Now;
+            foreach (var timestamp in Remove(now))
             {
                 callback.Invoke(timestamp);
             }
+
+            _lastNotificationTime = now;
         }
 
         /// <summary>
@@ -47,6 +49,15 @@ namespace OneSchedule
         private void Update()
         {
             var oneNote = new OneNote();
+
+            var now = DateTimeOffset.Now;
+            if (_lastUpdateTime > now)
+            {
+                // Clock jumped backwards. Rebuild the database just to be safe.
+                _timestamps.Clear();
+                _lastNotificationTime = DateTimeOffset.MinValue;
+                _lastNotificationTime = now;
+            }
 
             var modifiedTimestamps = FindAllTimestamps(oneNote, _lastUpdateTime, _lastNotificationTime);
             _lastUpdateTime = DateTimeOffset.Now;
