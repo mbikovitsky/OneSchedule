@@ -5,21 +5,24 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    public struct Notification
+    public class Notification
     {
-        public DateTimeOffset Date { get; set; }
+        public DateTimeOffset Date { get; }
 
-        public string Comment { get; set; }
+        public string Comment { get; }
 
         private static readonly JsonSerializerOptions SerializerOptions = new()
             {PropertyNamingPolicy = JsonNamingPolicy.CamelCase};
 
-        /// <summary>
-        /// Reads a notification structure from stdin.
-        /// </summary>
+        public Notification(DateTimeOffset date, string comment)
+        {
+            Date = date;
+            Comment = comment;
+        }
+
         public static async Task<Notification> ReadFromStream(Stream stream)
         {
-            return await JsonSerializer.DeserializeAsync<Notification>(stream, SerializerOptions);
+            return (await JsonSerializer.DeserializeAsync<Notification>(stream, SerializerOptions))!;
         }
 
         public async Task WriteToStream(Stream stream)

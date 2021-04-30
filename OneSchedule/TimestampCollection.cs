@@ -149,7 +149,7 @@ namespace OneSchedule
                     continue;
                 }
 
-                yield return new Timestamp {Date = timestamp, Comment = remainder};
+                yield return new Timestamp(timestamp, remainder);
             }
         }
 
