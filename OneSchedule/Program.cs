@@ -61,17 +61,13 @@ namespace OneSchedule
             scanTimer.Set(DateTime.Now.Ceil(ScanInterval), ScanInterval);
 
             var collection = new TimestampCollection();
-            var lastNotificationTime = DateTime.Now;
             while (true)
             {
-                collection.Update(lastNotificationTime);
-
-                lastNotificationTime = DateTime.Now;
-                foreach (var timestamp in collection.Remove(lastNotificationTime))
+                collection.Notify(timestamp =>
                 {
                     Console.WriteLine($"{timestamp.Date:g} - {timestamp.Comment}");
                     LaunchNotificationProcess(executable, timestamp);
-                }
+                });
 
                 scanTimer.WaitOne();
             }

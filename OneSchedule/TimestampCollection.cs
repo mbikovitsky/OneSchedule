@@ -27,16 +27,28 @@ namespace OneSchedule
         // and not some monotonic clock, so this is exactly what we want. Probably.
         private DateTime _lastUpdateTime = DateTime.MinValue;
 
+        private DateTime _lastNotificationTime = DateTime.Now;
+
+        public void Notify(Action<Timestamp> callback)
+        {
+            Update();
+
+            _lastNotificationTime = DateTime.Now;
+            foreach (var timestamp in Remove(_lastNotificationTime))
+            {
+                callback.Invoke(timestamp);
+            }
+        }
+
         /// <summary>
-        /// Updates the collection from OneNote, adding any new timestamps that are
-        /// <paramref name="after"/> the specified time, and deleting stale ones.
+        /// Updates the collection from OneNote, adding any new timestamps that were
+        /// added after the last notification, and deleting stale ones.
         /// </summary>
-        /// <param name="after">Only timestamps after this time will be added.</param>
-        public void Update(DateTime after)
+        private void Update()
         {
             var oneNote = new OneNote();
 
-            var modifiedTimestamps = FindAllTimestamps(oneNote, _lastUpdateTime, after);
+            var modifiedTimestamps = FindAllTimestamps(oneNote, _lastUpdateTime, _lastNotificationTime);
             _lastUpdateTime = DateTime.Now;
             _timestamps.Update(modifiedTimestamps);
 
@@ -48,7 +60,7 @@ namespace OneSchedule
         /// them from the collection.
         /// </summary>
         /// <param name="until">Only timestamps before this time will be returned.</param>
-        public IEnumerable<Timestamp> Remove(DateTime until)
+        private IEnumerable<Timestamp> Remove(DateTime until)
         {
             var toRemove = _timestamps.Values
                 .Select(list => list.TakeWhile(timestamp => timestamp.Date <= until))
