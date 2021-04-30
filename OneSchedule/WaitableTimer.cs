@@ -15,7 +15,7 @@ namespace OneSchedule
             }
         }
 
-        public void Set(DateTime dueTime, TimeSpan period, bool restore = false)
+        public void Set(DateTimeOffset dueTime, TimeSpan period, bool restore = false)
         {
             var success = Native.SetWaitableTimer(
                 SafeWaitHandle,
@@ -55,9 +55,9 @@ namespace OneSchedule
             }
         }
 
-        private static Native.LargeInteger DueTimeToLargeInteger(DateTime dueTime)
+        private static Native.LargeInteger DueTimeToLargeInteger(DateTimeOffset dueTime)
         {
-            return new() {QuadPart = dueTime.ToFileTimeUtc()};
+            return new() {QuadPart = dueTime.ToFileTime()};
         }
 
         private static Native.LargeInteger DueTimeToLargeInteger(TimeSpan dueTime)

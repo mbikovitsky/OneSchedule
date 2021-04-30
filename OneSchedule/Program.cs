@@ -58,7 +58,7 @@ namespace OneSchedule
 
             using var scanTimer = new WaitableTimer(false);
 
-            scanTimer.Set(DateTime.Now.Ceil(ScanInterval), ScanInterval);
+            scanTimer.Set(DateTimeOffset.Now.Ceil(ScanInterval), ScanInterval);
 
             var collection = new TimestampCollection();
             while (true)

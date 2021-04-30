@@ -7,7 +7,7 @@ namespace Common
 {
     public struct Notification
     {
-        public DateTime Date { get; set; }
+        public DateTimeOffset Date { get; set; }
 
         public string Comment { get; set; }
 

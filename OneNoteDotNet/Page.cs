@@ -9,7 +9,7 @@ namespace OneNoteDotNet
         {
         }
 
-        public DateTime? DateTime => ParseDateAttribute("dateTime");
+        public DateTimeOffset? DateTime => ParseDateAttribute("dateTime");
 
         public int? PageLevel => ParseIntAttribute("pageLevel");
 

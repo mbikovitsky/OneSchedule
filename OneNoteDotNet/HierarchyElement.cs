@@ -16,7 +16,7 @@ namespace OneNoteDotNet
         public string Id => Xml.Attribute("ID")?.Value ??
                             throw new InvalidDataException("Hierarchy element without an ID");
 
-        public DateTime? LastModifiedTime => ParseDateAttribute("lastModifiedTime");
+        public DateTimeOffset? LastModifiedTime => ParseDateAttribute("lastModifiedTime");
 
         public bool IsCurrentlyViewed => ParseBoolAttribute("isCurrentlyViewed").GetValueOrDefault(false);
 
@@ -42,7 +42,7 @@ namespace OneNoteDotNet
             return int.Parse(intString);
         }
 
-        protected DateTime? ParseDateAttribute(XName name)
+        protected DateTimeOffset? ParseDateAttribute(XName name)
         {
             var timeString = Xml.Attribute(name)?.Value;
             if (string.IsNullOrWhiteSpace(timeString))
@@ -50,7 +50,7 @@ namespace OneNoteDotNet
                 return null;
             }
 
-            return DateTime.ParseExact(timeString, "yyyy-MM-ddTHH:mm:ss.fffK", CultureInfo.InvariantCulture);
+            return DateTimeOffset.ParseExact(timeString, "yyyy-MM-ddTHH:mm:ss.fffK", CultureInfo.InvariantCulture);
         }
     }
 }

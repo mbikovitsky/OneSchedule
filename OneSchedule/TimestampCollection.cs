@@ -22,18 +22,18 @@ namespace OneSchedule
         /// </summary>
         private readonly Dictionary<string, List<Timestamp>> _timestamps = new();
 
-        // Yes, we're using DateTime to track updates because we're comparing it to page
+        // Yes, we're using DateTimeOffset to track updates because we're comparing it to page
         // modification times. The assumption is that page modification times are in local time,
         // and not some monotonic clock, so this is exactly what we want. Probably.
-        private DateTime _lastUpdateTime = DateTime.MinValue;
+        private DateTimeOffset _lastUpdateTime = DateTimeOffset.MinValue;
 
-        private DateTime _lastNotificationTime = DateTime.Now;
+        private DateTimeOffset _lastNotificationTime = DateTimeOffset.Now;
 
         public void Notify(Action<Timestamp> callback)
         {
             Update();
 
-            _lastNotificationTime = DateTime.Now;
+            _lastNotificationTime = DateTimeOffset.Now;
             foreach (var timestamp in Remove(_lastNotificationTime))
             {
                 callback.Invoke(timestamp);
@@ -49,7 +49,7 @@ namespace OneSchedule
             var oneNote = new OneNote();
 
             var modifiedTimestamps = FindAllTimestamps(oneNote, _lastUpdateTime, _lastNotificationTime);
-            _lastUpdateTime = DateTime.Now;
+            _lastUpdateTime = DateTimeOffset.Now;
             _timestamps.Update(modifiedTimestamps);
 
             CleanUp(oneNote);
@@ -60,7 +60,7 @@ namespace OneSchedule
         /// them from the collection.
         /// </summary>
         /// <param name="until">Only timestamps before this time will be returned.</param>
-        private IEnumerable<Timestamp> Remove(DateTime until)
+        private IEnumerable<Timestamp> Remove(DateTimeOffset until)
         {
             var toRemove = _timestamps.Values
                 .Select(list => list.TakeWhile(timestamp => timestamp.Date <= until))
@@ -94,8 +94,8 @@ namespace OneSchedule
 
         private static Dictionary<string, List<Timestamp>> FindAllTimestamps(
             OneNote oneNote,
-            DateTime pagesModifiedAfter,
-            DateTime timestampsAfter
+            DateTimeOffset pagesModifiedAfter,
+            DateTimeOffset timestampsAfter
         )
         {
             (string Id, List<Timestamp> Timestamps) PageTimestamps(Page page)
@@ -115,7 +115,7 @@ namespace OneSchedule
             return timestamps;
         }
 
-        private static IEnumerable<Timestamp> FindTimestampsInPage(PageContent pageContent, DateTime after)
+        private static IEnumerable<Timestamp> FindTimestampsInPage(PageContent pageContent, DateTimeOffset after)
         {
             return pageContent.PlainTextElements
                 .Where(element => !string.IsNullOrWhiteSpace(element))
@@ -142,9 +142,9 @@ namespace OneSchedule
             }
         }
 
-        private static bool ParseTimestamp(string timestampString, out DateTime timestamp)
+        private static bool ParseTimestamp(string timestampString, out DateTimeOffset timestamp)
         {
-            return DateTime.TryParseExact(timestampString, TimestampFormat, CultureInfo.InvariantCulture,
+            return DateTimeOffset.TryParseExact(timestampString, TimestampFormat, CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out timestamp);
         }
     }

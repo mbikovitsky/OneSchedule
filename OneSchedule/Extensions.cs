@@ -40,13 +40,13 @@ namespace OneSchedule
             }
         }
 
-        public static DateTime Ceil(this DateTime dateTime, TimeSpan span)
+        public static DateTimeOffset Ceil(this DateTimeOffset dateTime, TimeSpan span)
         {
             // https://stackoverflow.com/a/1393726/851560
 
             var wholeSpans = (dateTime.Ticks + span.Ticks - 1) / span.Ticks;
 
-            return new DateTime(wholeSpans * span.Ticks, dateTime.Kind);
+            return new DateTimeOffset(wholeSpans * span.Ticks, dateTime.Offset);
         }
     }
 }

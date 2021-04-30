@@ -4,7 +4,7 @@ namespace OneSchedule
 {
     internal readonly struct Timestamp : IEquatable<Timestamp>
     {
-        public DateTime Date { get; init; }
+        public DateTimeOffset Date { get; init; }
 
         public string Comment { get; init; }
 
