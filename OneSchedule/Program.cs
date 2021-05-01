@@ -60,7 +60,7 @@ namespace OneSchedule
             {
                 collection.Notify(@event =>
                 {
-                    Console.WriteLine($"{@event.Date:g} - {@event.Comment}");
+                    Console.WriteLine($"{@event.Date:yyyy-MM-ddTHH:mmK} - {@event.Comment}");
                     LaunchNotificationProcess(executable, @event);
                 });
 
