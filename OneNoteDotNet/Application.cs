@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Xml.Linq;
 using Microsoft.Office.Interop.OneNote;
@@ -10,35 +9,25 @@ namespace OneNoteDotNet
     /// Encapsulates access to the OneNote Application object.
     /// </summary>
     /// <remarks>
-    /// <para>This class is <b>not</b> thread-safe. Violating this constraint may lead to
-    /// <b>memory corruption</b>.</para>
     /// <para>Dispose each instance of this class to avoid leaving the OneNote application running
-    /// more than necessary and impacting user experience.</para>
+    /// longer than necessary and impacting user experience.</para>
     /// </remarks>
     [SupportedOSPlatform("windows")]
     public sealed class Application : IDisposable
     {
-        private Microsoft.Office.Interop.OneNote.Application? _application;
-
-        public Application()
-        {
-            _application = new Microsoft.Office.Interop.OneNote.Application();
-        }
+        private Microsoft.Office.Interop.OneNote.Application? _application = new();
 
         public void Dispose()
         {
-            // ReSharper disable once InvertIf
-            if (_application != null)
-            {
-                // ATTENTION
-                // First, see here: https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal.releasecomobject?view=net-5.0#remarks
-                // We're assuming that the Application object is not a singleton, so this call
-                // will not affect any other instances of this class. However, Disposing
-                // an instance while another thread tries to use the object will definitely
-                // corrupt memory.
-                Marshal.FinalReleaseComObject(_application);
-                _application = null;
-            }
+            // https://stackoverflow.com/a/3938075/851560
+            // https://stackoverflow.com/a/17131389/851560
+            SetComObjectReferenceToNull();
+            GC.Collect();
+        }
+
+        private void SetComObjectReferenceToNull()
+        {
+            _application = null;
         }
 
         public Hierarchy Hierarchy
