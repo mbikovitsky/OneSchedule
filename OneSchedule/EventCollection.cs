@@ -143,7 +143,7 @@ namespace OneSchedule
                 .Where(element => !string.IsNullOrWhiteSpace(element))
                 .Select(FindEventsInString)
                 .Flatten()
-                .Where(@event => @event.Date >= after)
+                .Where(@event => @event.Date > after)
                 .OrderBy(@event => @event.Date);
         }
 
