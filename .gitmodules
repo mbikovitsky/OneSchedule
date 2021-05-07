@@ -1,0 +1,4 @@
+[submodule "third_party/wil"]
+	path = third_party/wil
+	url = https://github.com/microsoft/wil.git
+	branch = master
