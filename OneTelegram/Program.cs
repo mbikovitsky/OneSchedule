@@ -167,7 +167,7 @@ namespace OneTelegram
         {
             var notification = await Notification.ReadFromStream(Console.OpenStandardInput());
 
-            var encodedDate = WebUtility.HtmlEncode(notification.Date.ToString("f"));
+            var encodedDate = WebUtility.HtmlEncode(notification.Date.ToString("yyyy-MM-ddTHH:mmK"));
             var encodedComment = WebUtility.HtmlEncode(notification.Comment);
 
             var messageHtml = $"<b>{encodedDate}</b>\n{encodedComment}";

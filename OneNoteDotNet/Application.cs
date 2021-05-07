@@ -1,22 +1,44 @@
 ﻿using System;
+using System.Runtime.Versioning;
 using System.Xml.Linq;
 using Microsoft.Office.Interop.OneNote;
 
 namespace OneNoteDotNet
 {
-    public class OneNote
+    /// <summary>
+    /// Encapsulates access to the OneNote Application object.
+    /// </summary>
+    /// <remarks>
+    /// <para>Dispose each instance of this class to avoid leaving the OneNote application running
+    /// longer than necessary and impacting user experience.</para>
+    /// </remarks>
+    [SupportedOSPlatform("windows")]
+    public sealed class Application : IDisposable
     {
-        private readonly Application _application;
+        private Microsoft.Office.Interop.OneNote.Application? _application = new();
 
-        public OneNote()
+        public void Dispose()
         {
-            _application = new Application();
+            // https://stackoverflow.com/a/3938075/851560
+            // https://stackoverflow.com/a/17131389/851560
+            SetComObjectReferenceToNull();
+            GC.Collect();
+        }
+
+        private void SetComObjectReferenceToNull()
+        {
+            _application = null;
         }
 
         public Hierarchy Hierarchy
         {
             get
             {
+                if (_application == null)
+                {
+                    throw new ObjectDisposedException(nameof(Application));
+                }
+
                 _application.GetHierarchy(null, HierarchyScope.hsPages, out var xmlString, XMLSchema.xs2013);
                 var xml = XElement.Parse(xmlString);
                 return new Hierarchy(xml);
@@ -25,6 +47,11 @@ namespace OneNoteDotNet
 
         public PageContent GetPageContent(string id, PageInfo pageInfo)
         {
+            if (_application == null)
+            {
+                throw new ObjectDisposedException(nameof(Application));
+            }
+
             var mappedPagedInfo = MapPageInfo(pageInfo);
             _application.GetPageContent(id, out var xmlString, mappedPagedInfo, XMLSchema.xs2013);
             var xml = XElement.Parse(xmlString);
