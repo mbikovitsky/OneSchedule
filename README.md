@@ -18,6 +18,7 @@ to launch for each event:
 OneSchedule [OPTIONS]+ program [ARGS]+
 
   -s, --silent               do not display a console window
+  -f, --full-scan=VALUE      interval for full scans, in minutes (default: 30)
   -h, --help                 this cruft
 ```
 
@@ -53,7 +54,8 @@ For more concrete examples, [see](#OneTelegram) [below](#OneExec).
 
 **Note**: Currently OneSchedule scans *all* open notebooks looking for timestamps
 when it launches. This may lead to slow response times in OneNote while the scan
-is in progress.
+is in progress. A full scan is also performed according to the interval specified
+using the `-f` option.
 
 **Note 2**: OneNote need *not* be open for OneSchedule to work. In this case,
 OneSchedule will use the notebooks that were last open.
