@@ -14,11 +14,15 @@ namespace OneSchedule
     {
         private static readonly TimeSpan ScanInterval = TimeSpan.FromMinutes(1);
 
+        private const int DefaultFullScanIntervalMinutes = 30;
+
         private readonly struct CommandLineOptions
         {
             public IReadOnlyList<string> Executable { get; init; }
 
             public bool Silent { get; init; }
+
+            public TimeSpan FullScanInterval { get; init; }
         }
 
         private static void Main(string[] args)
@@ -29,17 +33,23 @@ namespace OneSchedule
                 return;
             }
 
-            Run(commandLineOptions.Value.Executable, commandLineOptions.Value.Silent);
+            Run(commandLineOptions.Value.Executable, commandLineOptions.Value.Silent,
+                commandLineOptions.Value.FullScanInterval);
         }
 
         private static CommandLineOptions? ParseCommandLine(IEnumerable<string> args)
         {
             var showHelp = false;
             var silent = false;
+            TimeSpan fullScanInterval = TimeSpan.FromMinutes(DefaultFullScanIntervalMinutes);
             var parserConfig = new OptionSet
             {
-                {"s|silent", "do not display a console window", arg => silent = arg != null},
-                {"h|help", "this cruft", arg => showHelp = arg != null},
+                { "s|silent", "do not display a console window", arg => silent = arg != null },
+                {
+                    "f|full-scan=", $"interval for full scans, in minutes (default: {DefaultFullScanIntervalMinutes})",
+                    (int minutes) => fullScanInterval = TimeSpan.FromMinutes(minutes)
+                },
+                { "h|help", "this cruft", arg => showHelp = arg != null },
             };
             var executableArguments = parserConfig.Parse(args);
 
@@ -54,17 +64,21 @@ namespace OneSchedule
                 return null;
             }
 
-            return new CommandLineOptions {Executable = executableArguments, Silent = silent};
+            return new CommandLineOptions
+                { Executable = executableArguments, Silent = silent, FullScanInterval = fullScanInterval };
         }
 
-        private static void Run(IReadOnlyList<string> executable, bool silent)
+        private static void Run(IReadOnlyList<string> executable, bool silent, TimeSpan fullScanInterval)
         {
             if (silent)
             {
                 Native.FreeConsole();
             }
 
+            var fullScanStopwatch = new Stopwatch();
+
             var collection = new EventCollection();
+            fullScanStopwatch.Start();
             while (true)
             {
                 collection.Notify(@event =>
@@ -74,6 +88,14 @@ namespace OneSchedule
                 });
 
                 Sleep();
+
+                if (fullScanStopwatch.Elapsed < fullScanInterval)
+                {
+                    continue;
+                }
+
+                collection = new EventCollection();
+                fullScanStopwatch.Restart();
             }
         }
 

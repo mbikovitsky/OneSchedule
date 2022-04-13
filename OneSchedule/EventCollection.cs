@@ -57,7 +57,7 @@ namespace OneSchedule
             {
                 // Clock jumped backwards. Rebuild the database just to be safe.
                 _events.Clear();
-                _lastNotificationTime = DateTimeOffset.MinValue;
+                _lastUpdateTime = DateTimeOffset.MinValue;
                 _lastNotificationTime = now;
             }
 
