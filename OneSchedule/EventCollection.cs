@@ -31,6 +31,13 @@ namespace OneSchedule
 
         private DateTimeOffset _lastNotificationTime = DateTimeOffset.Now;
 
+        private readonly string _notebookToMonitor;
+
+        public EventCollection(string notebookToMonitor = "")
+        {
+            _notebookToMonitor = notebookToMonitor;
+        }
+
         public void Notify(Action<Event> callback)
         {
             Update();
@@ -61,7 +68,7 @@ namespace OneSchedule
                 _lastNotificationTime = now;
             }
 
-            var modifiedEvents = FindAllEvents(application, _lastUpdateTime, _lastNotificationTime);
+            var modifiedEvents = FindAllEvents(application, _notebookToMonitor, _lastUpdateTime, _lastNotificationTime);
             _lastUpdateTime = DateTimeOffset.Now;
             _events.Update(modifiedEvents);
 
@@ -118,12 +125,17 @@ namespace OneSchedule
 
         private static Dictionary<string, LinkedList<Event>> FindAllEvents(
             Application application,
+            string notebookId,
             DateTimeOffset pagesModifiedAfter,
             DateTimeOffset eventsAfter
         )
         {
+            IEnumerable<Page> pages = string.IsNullOrEmpty(notebookId)
+                ? application.Hierarchy.AllPages
+                : application.Hierarchy.Notebooks.FirstOrDefault(notebook => notebook.Id == notebookId)?.AllPages ??
+                  Array.Empty<Page>();
             var events = new Dictionary<string, LinkedList<Event>>(
-                application.Hierarchy.AllPages
+                pages
                     .Where(page => !page.IsInRecycleBin)
                     .Where(page =>
                         page.LastModifiedTime.GetValueOrDefault(pagesModifiedAfter) >= pagesModifiedAfter)
