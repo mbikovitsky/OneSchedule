@@ -6,6 +6,7 @@ using System.Runtime.Versioning;
 using System.Threading;
 using Common;
 using Mono.Options;
+using OneNoteDotNet;
 
 namespace OneSchedule
 {
@@ -23,6 +24,10 @@ namespace OneSchedule
             public bool Silent { get; init; }
 
             public TimeSpan FullScanInterval { get; init; }
+
+            public bool ShowNotebooks { get; init; }
+
+            public string NotebookToMonitor { get; init; }
         }
 
         private static void Main(string[] args)
@@ -33,8 +38,18 @@ namespace OneSchedule
                 return;
             }
 
+            if (commandLineOptions.Value.ShowNotebooks)
+            {
+                foreach (Notebook notebook in new Application().Hierarchy.Notebooks)
+                {
+                    Console.WriteLine($"{notebook.Name} - {notebook.Id}");
+                }
+
+                return;
+            }
+
             Run(commandLineOptions.Value.Executable, commandLineOptions.Value.Silent,
-                commandLineOptions.Value.FullScanInterval);
+                commandLineOptions.Value.FullScanInterval, commandLineOptions.Value.NotebookToMonitor);
         }
 
         private static CommandLineOptions? ParseCommandLine(IEnumerable<string> args)
@@ -42,6 +57,8 @@ namespace OneSchedule
             var showHelp = false;
             var silent = false;
             TimeSpan fullScanInterval = TimeSpan.FromMinutes(DefaultFullScanIntervalMinutes);
+            var showNotebooks = false;
+            string notebookToMonitor = "";
             var parserConfig = new OptionSet
             {
                 { "s|silent", "do not display a console window", arg => silent = arg != null },
@@ -49,12 +66,17 @@ namespace OneSchedule
                     "f|full-scan=", $"interval for full scans, in minutes (default: {DefaultFullScanIntervalMinutes})",
                     (int minutes) => fullScanInterval = TimeSpan.FromMinutes(minutes)
                 },
+                { "n|notebooks", "show a list of all notebooks and quit", arg => showNotebooks = arg != null },
+                {
+                    "m|monitor=", "ID of a notebook to monitor (default is to monitor everything)",
+                    arg => notebookToMonitor = arg
+                },
                 { "h|help", "this cruft", arg => showHelp = arg != null },
             };
             var executableArguments = parserConfig.Parse(args);
 
             // ReSharper disable once InvertIf
-            if (showHelp || executableArguments.Count <= 0)
+            if (showHelp || (executableArguments.Count <= 0 && !showNotebooks))
             {
                 var executableName = AppDomain.CurrentDomain.FriendlyName;
                 Console.WriteLine($"Usage: {executableName} [OPTIONS]+ program [ARGS]+");
@@ -65,10 +87,14 @@ namespace OneSchedule
             }
 
             return new CommandLineOptions
-                { Executable = executableArguments, Silent = silent, FullScanInterval = fullScanInterval };
+            {
+                Executable = executableArguments, Silent = silent, FullScanInterval = fullScanInterval,
+                ShowNotebooks = showNotebooks, NotebookToMonitor = notebookToMonitor
+            };
         }
 
-        private static void Run(IReadOnlyList<string> executable, bool silent, TimeSpan fullScanInterval)
+        private static void Run(IReadOnlyList<string> executable, bool silent, TimeSpan fullScanInterval,
+            string notebookToMonitor)
         {
             if (silent)
             {
@@ -77,7 +103,7 @@ namespace OneSchedule
 
             var fullScanStopwatch = new Stopwatch();
 
-            var collection = new EventCollection();
+            var collection = new EventCollection(notebookToMonitor);
             fullScanStopwatch.Start();
             while (true)
             {
@@ -94,7 +120,7 @@ namespace OneSchedule
                     continue;
                 }
 
-                collection = new EventCollection();
+                collection = new EventCollection(notebookToMonitor);
                 fullScanStopwatch.Restart();
             }
         }

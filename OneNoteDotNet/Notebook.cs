@@ -18,5 +18,7 @@ namespace OneNoteDotNet
 
         public IEnumerable<SectionGroup> SectionGroups =>
             XmlElements(SectionGroupTag).Select(element => new SectionGroup(element));
+
+        public IEnumerable<Page> AllPages => XmlDescendants(PageTag).Select(element => new Page(element));
     }
 }
