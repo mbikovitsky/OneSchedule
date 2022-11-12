@@ -31,9 +31,9 @@ namespace OneSchedule
 
         private DateTimeOffset _lastNotificationTime = DateTimeOffset.Now;
 
-        private readonly string _notebookToMonitor;
+        private readonly string? _notebookToMonitor;
 
-        public EventCollection(string notebookToMonitor = "")
+        public EventCollection(string? notebookToMonitor = null)
         {
             _notebookToMonitor = notebookToMonitor;
         }
@@ -125,12 +125,12 @@ namespace OneSchedule
 
         private static Dictionary<string, LinkedList<Event>> FindAllEvents(
             Application application,
-            string notebookId,
+            string? notebookId,
             DateTimeOffset pagesModifiedAfter,
             DateTimeOffset eventsAfter
         )
         {
-            IEnumerable<Page> pages = string.IsNullOrEmpty(notebookId)
+            IEnumerable<Page> pages = notebookId == null
                 ? application.Hierarchy.AllPages
                 : application.Hierarchy.Notebooks.FirstOrDefault(notebook => notebook.Id == notebookId)?.AllPages ??
                   Array.Empty<Page>();

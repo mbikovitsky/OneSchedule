@@ -27,7 +27,7 @@ namespace OneSchedule
 
             public bool ShowNotebooks { get; init; }
 
-            public string NotebookToMonitor { get; init; }
+            public string? NotebookToMonitor { get; init; }
         }
 
         private static void Main(string[] args)
@@ -58,7 +58,7 @@ namespace OneSchedule
             var silent = false;
             TimeSpan fullScanInterval = TimeSpan.FromMinutes(DefaultFullScanIntervalMinutes);
             var showNotebooks = false;
-            string notebookToMonitor = "";
+            string? notebookToMonitor = null;
             var parserConfig = new OptionSet
             {
                 { "s|silent", "do not display a console window", arg => silent = arg != null },
@@ -94,7 +94,7 @@ namespace OneSchedule
         }
 
         private static void Run(IReadOnlyList<string> executable, bool silent, TimeSpan fullScanInterval,
-            string notebookToMonitor)
+            string? notebookToMonitor)
         {
             if (silent)
             {
